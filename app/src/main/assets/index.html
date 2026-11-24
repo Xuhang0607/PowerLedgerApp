@@ -450,8 +450,9 @@
         <span>喵记账</span>
       </div>
       <div class="top-actions">
+        <button class="hdr-pill" onclick="openAutoSheet()">自动记账</button>
         <label class="hdr-pill">
-          导入账单
+          导入
           <input type="file" id="csv-file" accept=".csv,.xlsx,.zip,text/csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,*/*" onchange="handleFileUpload(event)" />
         </label>
         <button class="hdr-pill" onclick="clearAllData()">清空</button>
@@ -542,6 +543,58 @@
       </div>
       <div class="cat-grid" id="edit-cat-grid"></div>
       <button class="btn-del" onclick="deleteEditingRecord()">删除这笔记录</button>
+    </div>
+  </div>
+
+  <!-- 自动记账设置弹窗（仿照钱迹结构，首发适配微信） -->
+  <div class="mask" id="auto-mask" onclick="closeSheet('auto-mask', event)">
+    <div class="sheet" onclick="event.stopPropagation()">
+      <div class="sheet-hdr">
+        <div class="sheet-title">无障碍自动记账（已适配：微信）</div>
+        <button class="sheet-close" onclick="closeSheet('auto-mask')">关闭</button>
+      </div>
+
+      <div style="background:#f8f9fb;border-radius:12px;padding:10px 12px;margin-bottom:10px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:4px 0;">
+          <span style="font-weight:600;">自动记账总开关</span>
+          <input id="sw-auto" type="checkbox" onchange="toggleAutoEnabled(this.checked)" style="width:18px;height:18px;accent-color:#10b981;" />
+        </div>
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0 4px;border-top:1px solid #eef0f4;margin-top:6px;cursor:pointer;" onclick="openNative('openOverlaySettings')">
+          <span style="font-size:13px;">第1步：悬浮窗权限</span>
+          <span id="st-overlay" style="font-size:12px;font-weight:600;color:#ef4444;">未开启 ›</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0 4px;border-top:1px solid #eef0f4;cursor:pointer;" onclick="openNative('openAccessibilitySettings')">
+          <span style="font-size:13px;">第2步：无障碍权限</span>
+          <span id="st-a11y" style="font-size:12px;font-weight:600;color:#ef4444;">未开启 ›</span>
+        </div>
+      </div>
+
+      <div style="font-size:11.5px;color:#8c93a0;margin:0 0 6px 2px;">提高自动记账稳定性（参考钱迹推荐）</div>
+      <div style="background:#f8f9fb;border-radius:12px;padding:8px 12px;margin-bottom:10px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;cursor:pointer;" onclick="openNative('openBatteryOptimizationSettings')">
+          <div>
+            <div style="font-size:13px;font-weight:600;">忽略电池优化</div>
+            <div style="font-size:11px;color:#8c93a0;">避免后台暂停（无轮询，不额外耗电）</div>
+          </div>
+          <span id="st-battery" style="font-size:12px;font-weight:600;color:#ef4444;">未设置 ›</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0 4px;border-top:1px solid #eef0f4;">
+          <div>
+            <div style="font-size:13px;font-weight:600;">从多任务页面隐藏</div>
+            <div style="font-size:11px;color:#8c93a0;">避免一键清理时误杀无障碍服务</div>
+          </div>
+          <input id="sw-recents" type="checkbox" onchange="toggleExcludeRecents(this.checked)" style="width:18px;height:18px;accent-color:#10b981;" />
+        </div>
+      </div>
+
+      <div style="background:#fffbeb;border:1px solid #fde68a;border-radius:10px;padding:9px 11px;font-size:11.5px;color:#92400e;margin-bottom:10px;line-height:1.5;">
+        <b>一加 ColorOS 支付保护提示：</b>若识别不到微信支付页，请在手机「手机管家 -> 支付保护」中关闭微信的支付保护；微信发红包需发完后再点开红包即可识别。
+      </div>
+
+      <div style="display:flex;gap:8px;">
+        <button class="btn-save" style="flex:1;background:#f3f4f6;color:#1f2937;" onclick="showDebugLogs()">诊断日志</button>
+        <button class="btn-save" style="flex:1;" onclick="pullNativeQueue(true)">同步队列</button>
+      </div>
     </div>
   </div>
 
@@ -1091,6 +1144,86 @@
 
     function setFilter(f) { activeFilter = f; render(); }
 
+    function openAutoSheet() {
+      refreshAutoSettings();
+      document.getElementById('auto-mask').classList.add('open');
+    }
+
+    function openNative(method) {
+      if (window.PowerLedgerNative && window.PowerLedgerNative[method]) {
+        window.PowerLedgerNative[method]();
+      } else {
+        showToast('请在 Android 客户端中操作');
+      }
+    }
+
+    function refreshAutoSettings() {
+      if (!window.PowerLedgerNative || !window.PowerLedgerNative.getAutoSettings) return;
+      try {
+        const s = JSON.parse(window.PowerLedgerNative.getAutoSettings());
+        document.getElementById('sw-auto').checked = !!s.enabled;
+        document.getElementById('sw-recents').checked = !!s.excludeRecents;
+        const setSt = (id, ok, yesTxt, noTxt) => {
+          const el = document.getElementById(id);
+          el.textContent = ok ? yesTxt : noTxt;
+          el.style.color = ok ? '#10b981' : '#ef4444';
+        };
+        setSt('st-overlay', s.hasOverlay, '已开启 ✓', '未开启 ›');
+        setSt('st-a11y', s.hasA11y, '已开启 ✓', '未开启 ›');
+        setSt('st-battery', s.ignoringBattery, '已设置 ✓', '未设置 ›');
+      } catch (e) {}
+    }
+
+    function toggleAutoEnabled(val) {
+      if (window.PowerLedgerNative) window.PowerLedgerNative.setAutoEnabled(!!val);
+    }
+
+    function toggleExcludeRecents(val) {
+      if (window.PowerLedgerNative) window.PowerLedgerNative.setExcludeFromRecents(!!val);
+    }
+
+    function showDebugLogs() {
+      if (!window.PowerLedgerNative) { showToast('仅客户端可用'); return; }
+      try {
+        const logs = JSON.parse(window.PowerLedgerNative.getDebugLogs() || '[]');
+        alert(logs.length ? logs.join('\n') : '暂无事件日志');
+      } catch (e) { showToast('读取失败'); }
+    }
+
+    function pullNativeQueue(manual = false) {
+      if (!window.PowerLedgerNative) { if (manual) showToast('仅客户端可用'); return; }
+      try {
+        const incoming = JSON.parse(window.PowerLedgerNative.pullPendingRecords() || '[]');
+        if (!incoming.length) { if (manual) showToast('暂无新的自动记账'); return; }
+        const existingKeys = new Set(records.map(r => r.dedupKey || r.id));
+        let added = 0;
+        for (const item of incoming) {
+          const key = item.dedupKey || item.id;
+          if (!existingKeys.has(key)) {
+            if (item.merchant && merchantRules[item.merchant]) item.category = merchantRules[item.merchant];
+            records.unshift(item);
+            existingKeys.add(key);
+            added++;
+          }
+        }
+        if (added > 0) {
+          records.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
+          saveRecords();
+          render();
+          showToast(`已同步 ${added} 笔自动记账`);
+        } else if (manual) {
+          showToast('队列记录已同步过');
+        }
+      } catch (e) { if (manual) showToast('同步失败'); }
+    }
+
+    window.onNativeResume = function() {
+      refreshAutoSettings();
+      pullNativeQueue(false);
+    };
+
+    refreshAutoSettings();
+    pullNativeQueue(false);
     render();
   </script>
 </body>
