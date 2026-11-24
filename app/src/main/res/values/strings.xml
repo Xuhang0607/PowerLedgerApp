@@ -1,6 +1,6 @@
 <resources>
-    <string name="app_name">轻喵记</string>
-    <string name="service_name">轻喵记 · 支付通知监听</string>
-    <string name="accessibility_name">轻喵记 · 支付成功页识别</string>
+    <string name="app_name">喵记账</string>
+    <string name="service_name">喵记账 · 支付通知监听</string>
+    <string name="accessibility_name">喵记账 · 支付成功页识别</string>
     <string name="accessibility_desc">仅在微信与支付宝付款成功页面出现时触发一次提取金额与商户，不做任何后台轮询。</string>
 </resources>

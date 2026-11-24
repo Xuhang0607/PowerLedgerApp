@@ -3,20 +3,19 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>轻喵记</title>
+  <title>喵记账</title>
   <style>
     :root {
-      --bg: #fffbf2;
+      --bg: #f6f7fb;
       --card: #ffffff;
-      --text: #3b2f2f;
-      --muted: #8c7b75;
-      --border: #f0e4cc;
-      --shadow: #eadbc0;
-      --primary: #ff8fa3;
-      --primary-dark: #fb6f92;
-      --mint: #34d399;
+      --text: #1f2937;
+      --muted: #6b7280;
+      --border: #e9ecf2;
+      --shadow: rgba(17, 24, 39, 0.04);
+      --primary: #10b981;
+      --primary-dark: #059669;
+      --mint: #10b981;
       --mint-bg: #ecfdf5;
-      --yellow: #ffd166;
       --danger: #ef4444;
     }
     * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
@@ -34,7 +33,7 @@
       justify-content: space-between;
       align-items: center;
       margin-bottom: 12px;
-      padding: 4px 2px;
+      padding: 2px;
     }
     .brand {
       display: flex;
@@ -42,34 +41,33 @@
       gap: 10px;
     }
     .mascot {
-      width: 42px;
-      height: 42px;
-      background: #fff3c4;
-      border: 2px solid #f5d061;
-      border-radius: 16px;
+      width: 38px;
+      height: 38px;
+      background: #fff7db;
+      border: 1px solid #f5dfa0;
+      border-radius: 13px;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 22px;
-      box-shadow: 0 3px 0 #f5d061;
+      font-size: 20px;
     }
     .title {
-      font-size: 20px;
-      font-weight: 800;
+      font-size: 19px;
+      font-weight: 700;
       letter-spacing: -0.2px;
     }
     .subtitle {
       font-size: 11px;
       color: var(--muted);
-      font-weight: 600;
+      font-weight: 500;
     }
     .card {
       background: var(--card);
-      border-radius: 22px;
+      border-radius: 18px;
       padding: 14px;
       margin-bottom: 12px;
-      border: 2px solid var(--border);
-      box-shadow: 0 4px 0 var(--shadow);
+      border: 1px solid var(--border);
+      box-shadow: 0 3px 12px var(--shadow);
     }
     .quick-grid {
       display: grid;
@@ -82,37 +80,33 @@
       justify-content: center;
       gap: 6px;
       padding: 9px 10px;
-      border-radius: 14px;
-      border: 2px solid var(--border);
-      background: #fffdf8;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      background: #f9fafb;
       color: var(--text);
       font-size: 12.5px;
-      font-weight: 700;
+      font-weight: 600;
       cursor: pointer;
-      box-shadow: 0 2px 0 var(--border);
     }
-    .btn:active { transform: translateY(1px); box-shadow: none; }
+    .btn:active { opacity: 0.78; }
     .btn-primary {
       background: var(--primary);
-      border-color: var(--primary-dark);
+      border-color: var(--primary);
       color: #fff;
-      box-shadow: 0 3px 0 var(--primary-dark);
     }
     .btn-mint {
-      background: #34d399;
+      background: #10b981;
       border-color: #10b981;
       color: #fff;
-      box-shadow: 0 3px 0 #10b981;
     }
     .btn-danger {
       color: #dc2626;
       background: #fef2f2;
       border-color: #fecaca;
-      box-shadow: 0 2px 0 #fecaca;
     }
     .dot {
-      width: 8px;
-      height: 8px;
+      width: 7px;
+      height: 7px;
       border-radius: 50%;
       background: #d1d5db;
       display: inline-block;
@@ -124,61 +118,60 @@
     .period-tabs {
       display: grid;
       grid-template-columns: repeat(4, 1fr);
-      gap: 6px;
-      background: #fdf6e7;
+      gap: 4px;
+      background: #f3f4f6;
       padding: 4px;
-      border-radius: 16px;
-      border: 1.5px solid var(--border);
+      border-radius: 13px;
       margin-bottom: 10px;
     }
     .period-tab {
       border: none;
       background: transparent;
       padding: 7px 0;
-      border-radius: 12px;
+      border-radius: 10px;
       font-size: 12.5px;
-      font-weight: 700;
+      font-weight: 600;
       color: var(--muted);
       cursor: pointer;
     }
     .period-tab.active {
       background: #fff;
       color: var(--text);
-      box-shadow: 0 2px 0 var(--border);
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
     }
     .period-nav {
       display: flex;
       justify-content: space-between;
       align-items: center;
       margin-bottom: 12px;
-      background: #fff9eb;
+      background: #f9fafb;
       padding: 6px 10px;
-      border-radius: 14px;
-      border: 1.5px dashed #ebd9b5;
+      border-radius: 12px;
+      border: 1px solid var(--border);
     }
     .nav-arrow {
-      border: 1.5px solid var(--border);
+      border: 1px solid var(--border);
       background: #fff;
       color: var(--text);
-      border-radius: 10px;
-      padding: 4px 12px;
-      font-size: 13px;
-      font-weight: 800;
+      border-radius: 8px;
+      padding: 3px 11px;
+      font-size: 12px;
+      font-weight: 700;
       cursor: pointer;
     }
     .nav-label {
-      font-size: 14px;
-      font-weight: 800;
+      font-size: 13.5px;
+      font-weight: 700;
       color: var(--text);
     }
 
     /* 汇总数字区 */
     .hero-box {
-      background: linear-gradient(135deg, #fff3c4 0%, #ffe4ec 100%);
-      border-radius: 18px;
+      background: linear-gradient(135deg, #ecfdf5 0%, #eff6ff 100%);
+      border-radius: 16px;
       padding: 14px;
       margin-bottom: 14px;
-      border: 2px solid #f7d996;
+      border: 1px solid #d1fae5;
     }
     .summary-top {
       display: flex;
@@ -186,16 +179,16 @@
       align-items: flex-end;
       margin-bottom: 10px;
     }
-    .total-label { font-size: 12px; color: #7c5e52; font-weight: 700; }
-    .total-val { font-size: 28px; font-weight: 900; letter-spacing: -0.5px; color: #3b2f2f; }
+    .total-label { font-size: 12px; color: #4b5563; font-weight: 600; }
+    .total-val { font-size: 28px; font-weight: 800; letter-spacing: -0.5px; color: #111827; }
     .count-badge {
       background: #ffffff;
-      color: #fb6f92;
-      padding: 4px 11px;
+      color: #059669;
+      padding: 4px 10px;
       border-radius: 999px;
       font-size: 12px;
-      font-weight: 800;
-      border: 1.5px solid #ffc2d1;
+      font-weight: 700;
+      border: 1px solid #a7f3d0;
     }
     .mini-stats {
       display: grid;
@@ -203,14 +196,14 @@
       gap: 6px;
     }
     .mini-stat {
-      background: rgba(255, 255, 255, 0.78);
-      border-radius: 12px;
+      background: rgba(255, 255, 255, 0.85);
+      border-radius: 11px;
       padding: 7px 8px;
       text-align: center;
-      border: 1px solid rgba(255, 255, 255, 0.9);
+      border: 1px solid rgba(255, 255, 255, 0.95);
     }
-    .mini-stat-label { font-size: 10.5px; color: var(--muted); font-weight: 700; }
-    .mini-stat-val { font-size: 12.5px; font-weight: 800; margin-top: 2px; color: var(--text); }
+    .mini-stat-label { font-size: 10.5px; color: var(--muted); font-weight: 600; }
+    .mini-stat-val { font-size: 12.5px; font-weight: 700; margin-top: 2px; color: var(--text); }
 
     .cat-row { margin-bottom: 10px; }
     .cat-row:last-child { margin-bottom: 0; }
@@ -218,12 +211,12 @@
       display: flex;
       justify-content: space-between;
       font-size: 12.5px;
-      font-weight: 700;
+      font-weight: 600;
       margin-bottom: 4px;
     }
     .bar-bg {
-      height: 9px;
-      background: #f6efe2;
+      height: 7px;
+      background: #f1f5f9;
       border-radius: 999px;
       overflow: hidden;
     }
@@ -233,8 +226,8 @@
       transition: width 0.25s ease;
     }
     .section-title {
-      font-size: 14px;
-      font-weight: 800;
+      font-size: 13.5px;
+      font-weight: 700;
       margin-bottom: 10px;
       display: flex;
       justify-content: space-between;
@@ -243,13 +236,13 @@
     textarea {
       width: 100%;
       min-height: 60px;
-      border: 2px solid var(--border);
-      border-radius: 14px;
+      border: 1px solid var(--border);
+      border-radius: 12px;
       padding: 9px 10px;
       font-size: 13px;
       font-family: inherit;
       resize: vertical;
-      background: #fffdf8;
+      background: #f9fafb;
       outline: none;
       color: var(--text);
     }
@@ -264,12 +257,12 @@
       flex: 1.25;
       text-align: center;
       padding: 9px 10px;
-      border-radius: 14px;
-      border: 2px dashed #e6cfa3;
-      background: #fff9eb;
+      border-radius: 12px;
+      border: 1px dashed #cbd5e1;
+      background: #f8fafc;
       font-size: 12px;
-      font-weight: 700;
-      color: #6b5344;
+      font-weight: 600;
+      color: #475569;
       cursor: pointer;
     }
     .file-label input { display: none; }
@@ -283,10 +276,10 @@
     .pill {
       padding: 5px 12px;
       border-radius: 999px;
-      border: 1.5px solid var(--border);
-      background: #fffdf8;
+      border: 1px solid var(--border);
+      background: #f9fafb;
       font-size: 12px;
-      font-weight: 700;
+      font-weight: 600;
       color: var(--muted);
       white-space: nowrap;
       cursor: pointer;
@@ -300,12 +293,12 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
-      background: #fdf6e7;
+      background: #f8fafc;
       padding: 6px 10px;
-      border-radius: 10px;
+      border-radius: 9px;
       font-size: 11.5px;
-      font-weight: 800;
-      color: #7c5e52;
+      font-weight: 700;
+      color: #64748b;
       margin: 10px 0 6px;
     }
     .day-group-hdr:first-child { margin-top: 0; }
@@ -314,16 +307,16 @@
       justify-content: space-between;
       align-items: center;
       padding: 9px 2px;
-      border-bottom: 1.5px dashed #f3ead8;
+      border-bottom: 1px solid #f1f5f9;
       gap: 8px;
     }
     .tx-item:last-child { border-bottom: none; padding-bottom: 0; }
     .tx-icon {
       width: 34px;
       height: 34px;
-      border-radius: 12px;
-      background: #fff6e5;
-      border: 1.5px solid #f5e2bd;
+      border-radius: 11px;
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -405,8 +398,8 @@
     <div class="brand">
       <div class="mascot">🐱</div>
       <div>
-        <div class="title">轻喵记</div>
-        <div class="subtitle">轻巧省电 · 奶油小猫账本</div>
+        <div class="title">喵记账</div>
+        <div class="subtitle">事件驱动 · 低功耗自动记账</div>
       </div>
     </div>
   </div>
@@ -487,9 +480,9 @@
     <div id="direct-entry-box">
       <div style="display:flex;gap:8px;margin-bottom:8px;">
         <input id="manual-amt" type="number" inputmode="decimal" step="0.01" placeholder="金额（元）"
-          style="flex:1;min-width:0;border:2px solid var(--border);border-radius:14px;padding:9px 10px;font-size:14px;font-weight:700;background:#fffdf8;color:var(--text);outline:none;" />
+          style="flex:1;min-width:0;border:1px solid var(--border);border-radius:12px;padding:9px 10px;font-size:14px;font-weight:600;background:#f9fafb;color:var(--text);outline:none;" />
         <select id="manual-cat"
-          style="flex:1;border:2px solid var(--border);border-radius:14px;padding:9px 8px;font-size:13px;font-weight:700;background:#fffdf8;color:var(--text);outline:none;">
+          style="flex:1;border:1px solid var(--border);border-radius:12px;padding:9px 8px;font-size:13px;font-weight:600;background:#f9fafb;color:var(--text);outline:none;">
           <option value="餐饮">🍜 餐饮</option>
           <option value="交通">🚕 交通</option>
           <option value="日用便利">🛒 日用便利</option>
@@ -501,9 +494,9 @@
       </div>
       <div style="display:flex;gap:8px;margin-bottom:8px;">
         <input id="manual-note" type="text" placeholder="商户/备注（选填，如：瑞幸咖啡）"
-          style="flex:1.3;min-width:0;border:2px solid var(--border);border-radius:14px;padding:8px 10px;font-size:13px;background:#fffdf8;color:var(--text);outline:none;" />
+          style="flex:1.3;min-width:0;border:1px solid var(--border);border-radius:12px;padding:8px 10px;font-size:13px;background:#f9fafb;color:var(--text);outline:none;" />
         <input id="manual-date" type="date"
-          style="flex:1;min-width:0;border:2px solid var(--border);border-radius:14px;padding:8px 8px;font-size:12px;background:#fffdf8;color:var(--text);outline:none;" />
+          style="flex:1;min-width:0;border:1px solid var(--border);border-radius:12px;padding:8px 8px;font-size:12px;background:#f9fafb;color:var(--text);outline:none;" />
       </div>
       <div class="row-actions" style="margin-top:0;">
         <button class="btn btn-primary" style="flex:1;" onclick="addManualDirect()">🐱 记一笔</button>
