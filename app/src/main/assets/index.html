@@ -307,8 +307,8 @@
     <div class="row-actions">
       <button class="btn btn-primary" style="flex:1;" onclick="parseManualText()">识别并记账</button>
       <label class="file-label">
-        导入微信/支付宝 CSV
-        <input type="file" id="csv-file" accept=".csv,text/csv,text/comma-separated-values,*/*" onchange="handleCsvUpload(event)" />
+        导入微信/支付宝账单 (CSV/XLSX)
+        <input type="file" id="csv-file" accept=".csv,.xlsx,.zip,text/csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,*/*" onchange="handleCsvUpload(event)" />
       </label>
     </div>
   </div>
@@ -524,6 +524,12 @@
     }
 
     function decodeCsvBuffer(buffer) {
+      const bytes = new Uint8Array(buffer);
+      if (bytes.length >= 2 && ((bytes[0] === 0xFF && bytes[1] === 0xFE) || (bytes[0] === 0xFE && bytes[1] === 0xFF))) {
+        try {
+          return new TextDecoder(bytes[0] === 0xFF ? 'utf-16le' : 'utf-16be').decode(buffer);
+        } catch (e) {}
+      }
       const utf8 = new TextDecoder('utf-8').decode(buffer);
       if (utf8.includes('交易时间') && utf8.includes('交易对方')) return utf8;
       try {
@@ -533,19 +539,140 @@
       return utf8;
     }
 
+    async function unzipEntries(buffer) {
+      const view = new DataView(buffer);
+      const bytes = new Uint8Array(buffer);
+      let eocdOffset = -1;
+      for (let i = bytes.length - 22; i >= Math.max(0, bytes.length - 65557); i--) {
+        if (view.getUint32(i, true) === 0x06054b50) {
+          eocdOffset = i;
+          break;
+        }
+      }
+      if (eocdOffset === -1) throw new Error('Invalid ZIP/XLSX');
+      const cdOffset = view.getUint32(eocdOffset + 16, true);
+      const totalEntries = view.getUint16(eocdOffset + 10, true);
+      const entries = {};
+      let ptr = cdOffset;
+      const decoder = new TextDecoder('utf-8');
+
+      for (let i = 0; i < totalEntries; i++) {
+        if (view.getUint32(ptr, true) !== 0x02014b50) break;
+        const method = view.getUint16(ptr + 10, true);
+        const compSize = view.getUint32(ptr + 20, true);
+        const nameLen = view.getUint16(ptr + 28, true);
+        const extraLen = view.getUint16(ptr + 30, true);
+        const commentLen = view.getUint16(ptr + 32, true);
+        const localOffset = view.getUint32(ptr + 42, true);
+        const name = decoder.decode(bytes.subarray(ptr + 46, ptr + 46 + nameLen));
+        ptr += 46 + nameLen + extraLen + commentLen;
+
+        const lNameLen = view.getUint16(localOffset + 26, true);
+        const lExtraLen = view.getUint16(localOffset + 28, true);
+        const dataStart = localOffset + 30 + lNameLen + lExtraLen;
+        const compData = bytes.subarray(dataStart, dataStart + compSize);
+
+        if (method === 0) {
+          entries[name] = compData.buffer.slice(compData.byteOffset, compData.byteOffset + compData.byteLength);
+        } else if (method === 8) {
+          const ds = new DecompressionStream('deflate-raw');
+          const decompressed = await new Response(new Blob([compData]).stream().pipeThrough(ds)).arrayBuffer();
+          entries[name] = decompressed;
+        }
+      }
+      return entries;
+    }
+
+    function colRefToIndex(ref) {
+      const m = (ref || '').match(/^([A-Z]+)/i);
+      if (!m) return -1;
+      let idx = 0;
+      const letters = m[1].toUpperCase();
+      for (let i = 0; i < letters.length; i++) {
+        idx = idx * 26 + (letters.charCodeAt(i) - 64);
+      }
+      return idx - 1;
+    }
+
+    function parseXlsxEntries(entries) {
+      const dec = new TextDecoder('utf-8');
+      const dom = new DOMParser();
+      const sharedStrings = [];
+      if (entries['xl/sharedStrings.xml']) {
+        const sDoc = dom.parseFromString(dec.decode(entries['xl/sharedStrings.xml']), 'text/xml');
+        const sis = sDoc.getElementsByTagName('si');
+        for (let i = 0; i < sis.length; i++) {
+          const ts = sis[i].getElementsByTagName('t');
+          let str = '';
+          for (let j = 0; j < ts.length; j++) str += ts[j].textContent || '';
+          sharedStrings.push(str);
+        }
+      }
+      const sheetKey = Object.keys(entries).find(k => /^xl\/worksheets\/sheet\d+\.xml$/i.test(k));
+      if (!sheetKey) return [];
+      const doc = dom.parseFromString(dec.decode(entries[sheetKey]), 'text/xml');
+      const rowNodes = doc.getElementsByTagName('row');
+      const rows = [];
+      for (let r = 0; r < rowNodes.length; r++) {
+        const cells = rowNodes[r].getElementsByTagName('c');
+        const rowArr = [];
+        for (let c = 0; c < cells.length; c++) {
+          const cell = cells[c];
+          const colIdx = colRefToIndex(cell.getAttribute('r'));
+          const targetIdx = colIdx >= 0 ? colIdx : rowArr.length;
+          const t = cell.getAttribute('t');
+          let val = '';
+          if (t === 's') {
+            const vNode = cell.getElementsByTagName('v')[0];
+            val = vNode ? (sharedStrings[parseInt(vNode.textContent, 10)] || '') : '';
+          } else if (t === 'inlineStr') {
+            const tNodes = cell.getElementsByTagName('t');
+            for (let k = 0; k < tNodes.length; k++) val += tNodes[k].textContent || '';
+          } else {
+            const vNode = cell.getElementsByTagName('v')[0];
+            val = vNode ? (vNode.textContent || '') : '';
+          }
+          rowArr[targetIdx] = val.trim();
+        }
+        rows.push(rowArr.map(v => v || ''));
+      }
+      return rows;
+    }
+
+    async function extractRowsFromBuffer(buffer) {
+      const bytes = new Uint8Array(buffer);
+      if (bytes.length >= 2 && bytes[0] === 0x50 && bytes[1] === 0x4B) {
+        const entries = await unzipEntries(buffer);
+        if (entries['xl/workbook.xml'] || Object.keys(entries).some(k => k.startsWith('xl/worksheets/'))) {
+          return parseXlsxEntries(entries);
+        }
+        const csvKey = Object.keys(entries).find(k => k.toLowerCase().endsWith('.csv'));
+        if (csvKey) {
+          const text = decodeCsvBuffer(entries[csvKey]);
+          return text.split(/\r?\n/).filter(l => l.trim().length > 0).map(parseCsvLine);
+        }
+        const xlsxKey = Object.keys(entries).find(k => k.toLowerCase().endsWith('.xlsx'));
+        if (xlsxKey) {
+          const subEntries = await unzipEntries(entries[xlsxKey]);
+          return parseXlsxEntries(subEntries);
+        }
+      }
+      const text = decodeCsvBuffer(buffer);
+      return text.split(/\r?\n/).filter(l => l.trim().length > 0).map(parseCsvLine);
+    }
+
     function handleCsvUpload(event) {
       const file = event.target.files && event.target.files[0];
       if (!file) return;
       const reader = new FileReader();
-      reader.onload = () => {
+      reader.onload = async () => {
         try {
-          const text = decodeCsvBuffer(reader.result);
-          const lines = text.split(/\r?\n/).filter(l => l.trim().length > 0);
+          const rows = await extractRowsFromBuffer(reader.result);
           let headerIdx = -1;
           let headers = [];
 
-          for (let i = 0; i < lines.length; i++) {
-            const cols = parseCsvLine(lines[i]).map(c => c.replace(/^\uFEFF/, '').trim());
+          for (let i = 0; i < rows.length; i++) {
+            const cols = rows[i].map(c => String(c || '').replace(/^\uFEFF/, '').trim());
             if (cols.some(c => c.includes('交易时间')) &&
                 cols.some(c => c.includes('交易对方')) &&
                 cols.some(c => c.includes('收/支'))) {
@@ -574,9 +701,9 @@
           let imported = 0;
           let skippedRefund = 0;
 
-          for (let i = headerIdx + 1; i < lines.length; i++) {
-            const cols = parseCsvLine(lines[i]);
-            if (cols.length < 4) continue;
+          for (let i = headerIdx + 1; i < rows.length; i++) {
+            const cols = rows[i];
+            if (!cols || cols.length < 4) continue;
             const ioType = (cols[idxType] || '').trim();
             if (!ioType.includes('支出')) continue;
 
@@ -621,7 +748,7 @@
               amount,
               merchant: merchant.slice(0, 24),
               category,
-              channel: partialMatch ? '账单CSV(部分退款后)' : '账单CSV',
+              channel: partialMatch ? '账单导入(部分退款后)' : '账单导入',
               timestamp: ts,
               source: 'csv'
             });
@@ -637,7 +764,7 @@
             showToast(skippedRefund > 0 ? `已过滤 ${skippedRefund} 笔退款，无新支出` : '没有新的支出记录可导入');
           }
         } catch (err) {
-          showToast('CSV 解析失败');
+          showToast('账单解析失败：' + (err && err.message ? err.message : '格式不支持'));
         }
         event.target.value = '';
       };
