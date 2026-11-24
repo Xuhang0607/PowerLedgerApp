@@ -326,23 +326,44 @@
 
   <script>
     const STORAGE_KEY = 'power_ledger_records_v1';
-    const CATEGORIES = ['餐饮', '交通', '日用便利', '购物'];
+    const MERCHANT_RULES_KEY = 'power_ledger_merchant_rules_v1';
+    const CATEGORIES = ['餐饮', '交通', '日用便利', '生活缴费', '休闲娱乐', '转账人情', '购物'];
     const CAT_COLORS = {
       '餐饮': '#f59e0b',
       '交通': '#3b82f6',
       '日用便利': '#10b981',
+      '生活缴费': '#06b6d4',
+      '休闲娱乐': '#ec4899',
+      '转账人情': '#6366f1',
       '购物': '#8b5cf6'
     };
 
-    const KEYWORDS = {
-      '餐饮': ['餐', '饭', '面', '咖啡', '奶茶', '饮', '外卖', '饿了么', '美团', '瑞幸', '麦当劳', '肯德基', '居酒屋', '拉面', '便当', '小吃', '火锅'],
-      '交通': ['地铁', '公交', '打车', '滴滴', '高铁', '火车', '出行', '油', '停车', '电车', 'suica', 'pasmo', 'icoca', '出租'],
-      '日用便利': ['便利', '全家', '罗森', '7-11', '7eleven', '超市', '菜', '生鲜', '日用', '药妆', '松本清', '百货'],
-      '购物': ['淘宝', '京东', '拼多多', '商城', '服饰', '数码', '购物', '亚马逊', 'amazon', '乐天', '旗舰店']
-    };
+    const ORDERED_KEYWORDS = [
+      ['生活缴费', ['话费', '充值', '中国移动', '中国联通', '中国电信', '物业', '水费', '电费', '燃气', '宽带', '供暖', '社保']],
+      ['休闲娱乐', ['烫发', '染发', '美发', '理发', '沙龙', '美甲', '滑雪', '门票', '影院', '电影', 'ktv', '游乐', '景区', '健身', '按摩', '足浴', '网费', '会员', '游戏', '网络']],
+      ['交通', ['地铁', '公交', '打车', '滴滴', '高德打车', '花小猪', '高铁', '火车', '12306', '出行', '加油', '停车', '高速', '电车', 'suica', 'pasmo', 'icoca', '出租', '单车']],
+      ['餐饮', ['外卖', '闪购', '小时达', '餐', '饭', '面', '粉', '米线', '麻辣', '香锅', '火锅', '涮', '烧烤', '烤肉', '炸鸡', '汉堡', '披萨', '必胜客', '麦当劳', '肯德基', '瑞幸', '星巴克', '咖啡', '奶茶', '茶饮', '饮品', '饮', '甜品', '蛋糕', '面包', '零食', '好想来', '居酒屋', '拉面', '便当', '小吃', '烩面', '拌面', '堡', '饿了么', '食堂', '早餐', '夜宵']],
+      ['日用便利', ['便利', '全家', '罗森', '7-11', '7eleven', '超市', '菜', '生鲜', '水果', '买菜', '日用', '药妆', '药房', '药店', '松本清', '百货', '商贸', '洗护', '纸巾']],
+      ['转账人情', ['微信转账', '支付宝转账', '转账', '扫二维码付款', '二维码收款', '发红包', '亲属卡']]
+    ];
+    const PLATFORM_KEYWORDS = ['淘宝', '京东', '拼多多', '商城', '旗舰店', '服饰', '数码', '亚马逊', 'amazon', '乐天', '美团', '抖音'];
 
     let activeFilter = '全部';
     let records = loadRecords();
+    let merchantRules = loadMerchantRules();
+
+    function loadMerchantRules() {
+      try {
+        const raw = localStorage.getItem(MERCHANT_RULES_KEY);
+        return raw ? JSON.parse(raw) : {};
+      } catch (e) {
+        return {};
+      }
+    }
+
+    function saveMerchantRules() {
+      localStorage.setItem(MERCHANT_RULES_KEY, JSON.stringify(merchantRules));
+    }
 
     function loadRecords() {
       try {
@@ -365,12 +386,19 @@
       showToast._t = setTimeout(() => { el.style.display = 'none'; }, 2400);
     }
 
-    function classify(text, amount) {
+    function classify(text, amount, merchant) {
+      const mKey = (merchant || '').trim();
+      if (mKey && merchantRules[mKey] && CATEGORIES.includes(merchantRules[mKey])) {
+        return merchantRules[mKey];
+      }
       const lower = (text || '').toLowerCase();
-      for (const cat of CATEGORIES) {
-        if (KEYWORDS[cat].some(kw => lower.includes(kw))) {
+      for (const [cat, kws] of ORDERED_KEYWORDS) {
+        if (kws.some(kw => lower.includes(kw))) {
           return cat;
         }
+      }
+      if (PLATFORM_KEYWORDS.some(kw => lower.includes(kw))) {
+        return amount <= 35 ? '餐饮' : '购物';
       }
       if (amount <= 35) return '餐饮';
       if (amount <= 150) return '日用便利';
@@ -434,6 +462,9 @@
         for (const item of incoming) {
           const key = item.dedupKey || item.id;
           if (!existingKeys.has(key)) {
+            if (item.merchant && merchantRules[item.merchant]) {
+              item.category = merchantRules[item.merchant];
+            }
             records.unshift(item);
             existingKeys.add(key);
             added++;
@@ -482,7 +513,7 @@
       }
 
       const channel = text.includes('支付宝') ? '支付宝' : (text.includes('微信') ? '微信' : '手动');
-      const category = classify(merchant + ' ' + text, amount);
+      const category = classify(merchant + ' ' + text, amount, merchant);
 
       records.unshift({
         id: 'manual_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6),
@@ -740,7 +771,7 @@
 
             const merchant = peer || (goods && goods !== '/' ? goods : '账单导入');
             const ts = Date.parse(timeStr.replace(/-/g, '/')) || Date.now();
-            const category = classify(`${txType} ${peer} ${goods}`, amount);
+            const category = classify(`${txType} ${peer} ${goods}`, amount, merchant);
 
             records.push({
               id: 'csv_' + dedupOrder,
@@ -775,6 +806,11 @@
       const target = records.find(r => r.id === id);
       if (target) {
         target.category = newCat;
+        const generic = ['淘宝平台商户', '抖音生活服务商家', '美团', '京东', '手动补录', '账单导入'];
+        if (target.merchant && !generic.includes(target.merchant)) {
+          merchantRules[target.merchant] = newCat;
+          saveMerchantRules();
+        }
         saveRecords();
         render();
       }
