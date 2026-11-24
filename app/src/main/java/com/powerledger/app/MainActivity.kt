@@ -79,13 +79,26 @@ class MainActivity : AppCompatActivity() {
     override fun onResume() {
         super.onResume()
         if (::webView.isInitialized) {
+            webView.onResume()
+            webView.resumeTimers()
             webView.evaluateJavascript("window.onNativeResume && window.onNativeResume()", null)
         }
+    }
+
+    override fun onPause() {
+        if (::webView.isInitialized) {
+            webView.onPause()
+            webView.pauseTimers()
+        }
+        super.onPause()
     }
 
     override fun onDestroy() {
         filePathCallback?.onReceiveValue(null)
         filePathCallback = null
+        if (::webView.isInitialized) {
+            webView.destroy()
+        }
         super.onDestroy()
     }
 

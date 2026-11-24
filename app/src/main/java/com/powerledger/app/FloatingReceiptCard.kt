@@ -103,6 +103,7 @@ object FloatingReceiptCard {
             container.addView(dotView)
             container.addView(summaryText)
             container.addView(undoButton)
+            container.setOnClickListener { removeCurrentView(windowManager) }
 
             val maxWidth = (appContext.resources.displayMetrics.widthPixels * 0.92).toInt()
             val params = WindowManager.LayoutParams(
@@ -137,6 +138,7 @@ object FloatingReceiptCard {
         dismissRunnable = null
         currentView?.let { view ->
             try {
+                view.animate().cancel()
                 if (view.isAttachedToWindow) {
                     windowManager.removeViewImmediate(view)
                 }

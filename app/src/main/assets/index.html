@@ -411,9 +411,15 @@
     </div>
   </div>
 
-  <!-- 快捷操作 -->
-  <div class="card">
-    <div class="quick-grid">
+  <!-- 快捷操作（权限全部开启后自动收起为精简状态条） -->
+  <div class="card" style="padding:11px 14px;">
+    <div id="perm-summary-bar" onclick="toggleQuickPanel()" style="display:flex;justify-content:space-between;align-items:center;cursor:pointer;">
+      <span id="perm-summary-text" style="font-size:12.5px;font-weight:800;display:flex;align-items:center;gap:6px;">
+        <span class="dot"></span>权限与快捷操作
+      </span>
+      <span id="perm-toggle-arrow" style="font-size:12px;color:var(--muted);font-weight:700;">收起 ▲</span>
+    </div>
+    <div id="quick-panel-body" class="quick-grid" style="margin-top:10px;">
       <button class="btn" onclick="openAccessibilitySettings()">
         <span id="dot-a11y" class="dot"></span>无障碍自动记账
       </button>
@@ -677,10 +683,20 @@
       return Math.max(1, uniqueDays.size);
     }
 
+    let quickPanelExpanded = true;
+    let autoCollapsedOnce = false;
+
+    function toggleQuickPanel(forceState) {
+      quickPanelExpanded = typeof forceState === 'boolean' ? forceState : !quickPanelExpanded;
+      document.getElementById('quick-panel-body').style.display = quickPanelExpanded ? 'grid' : 'none';
+      document.getElementById('perm-toggle-arrow').textContent = quickPanelExpanded ? '收起 ▲' : '展开 ▼';
+    }
+
     function refreshPermissionDots() {
       const dotA11y = document.getElementById('dot-a11y');
       const dotNotif = document.getElementById('dot-notif');
       const dotOverlay = document.getElementById('dot-overlay');
+      const summaryText = document.getElementById('perm-summary-text');
       if (window.PowerLedgerNative) {
         try {
           const aOk = window.PowerLedgerNative.isAccessibilityServiceEnabled();
@@ -689,6 +705,14 @@
           dotA11y.className = 'dot ' + (aOk ? 'on' : 'off');
           dotNotif.className = 'dot ' + (nOk ? 'on' : 'off');
           dotOverlay.className = 'dot ' + (oOk ? 'on' : 'off');
+          const allReady = aOk && nOk && oOk;
+          summaryText.innerHTML = allReady
+            ? '<span class="dot on"></span>自动记账权限已就绪（点击管理）'
+            : '<span class="dot off"></span>尚有权限未开启（点击设置）';
+          if (allReady && !autoCollapsedOnce) {
+            autoCollapsedOnce = true;
+            toggleQuickPanel(false);
+          }
         } catch (e) {}
       }
     }

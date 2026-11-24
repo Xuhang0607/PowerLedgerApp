@@ -44,12 +44,13 @@ class PaymentAccessibilityService : AccessibilityService() {
         if (pkg != PKG_WECHAT && pkg != PKG_ALIPAY) return
 
         val now = System.currentTimeMillis()
-        if (now - lastScanTimeMs < 200L) return
+        val isWindowSwitch = event.eventType == AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED
+        if (!isWindowSwitch && now - lastScanTimeMs < 450L) return
         lastScanTimeMs = now
 
         val root = rootInActiveWindow ?: return
-        val texts = ArrayList<String>(48)
-        collectTexts(root, texts, maxNodes = 220)
+        val texts = ArrayList<String>(40)
+        collectTexts(root, texts, maxNodes = 100)
         if (texts.isEmpty()) return
 
         val combined = texts.joinToString(" ")
