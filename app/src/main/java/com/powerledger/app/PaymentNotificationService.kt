@@ -8,7 +8,7 @@ import java.util.Locale
 /**
  * 纯事件驱动的通知监听服务：
  * - 仅监听微信 (com.tencent.mm) 与支付宝 (com.eg.android.AlipayGphone)
- * - 禁止任何后台轮询线程与无障碍服务
+ * - 支持支出通知识别与退款到账通知冲账，并与无障碍服务共享 20 秒同包名+同金额防重
  */
 class PaymentNotificationService : NotificationListenerService() {
 
@@ -19,19 +19,18 @@ class PaymentNotificationService : NotificationListenerService() {
         private val TARGET_PACKAGES = setOf(PKG_WECHAT, PKG_ALIPAY)
 
         private val INCLUDE_KEYWORDS = listOf(
-            "支付", "付款", "扣款", "消费", "支出", "¥", "￥", "元"
+            "支付", "付款", "扣款", "消费", "支出", "退款", "¥", "￥", "元"
         )
 
         private val EXCLUDE_KEYWORDS = listOf(
-            "已收款", "收款到账", "退款", "红包", "转入", "收益", "还款"
+            "已收款", "收款到账", "红包", "转入", "收益", "还款"
         )
 
-        // 优先匹配带货币符号或“元”的金额，其次匹配支付动词后的数字
         private val CURRENCY_AMOUNT_REGEX = Regex(
             "(?:¥|￥|RMB|人民币)\\s*([0-9]+(?:\\.[0-9]{1,2})?)|([0-9]+(?:\\.[0-9]{1,2})?)\\s*元"
         )
         private val VERB_AMOUNT_REGEX = Regex(
-            "(?:支付|付款|扣款|消费|支出)\\D{0,6}([0-9]+(?:\\.[0-9]{1,2})?)"
+            "(?:支付|付款|扣款|消费|支出|退款)\\D{0,6}([0-9]+(?:\\.[0-9]{1,2})?)"
         )
     }
 
@@ -55,23 +54,27 @@ class PaymentNotificationService : NotificationListenerService() {
         if (INCLUDE_KEYWORDS.none { combined.contains(it) }) return
         if (EXCLUDE_KEYWORDS.any { combined.contains(it) }) return
 
-        val amount = extractAmount(combined) ?: return
-        if (amount <= 0.0) return
+        val rawAmount = extractAmount(combined) ?: return
+        if (rawAmount <= 0.0) return
 
-        val channel = if (pkg == PKG_WECHAT) "微信" else "支付宝"
-        val merchant = extractMerchant(title, combined, channel)
-        val category = CategoryClassifier.classify("$merchant $combined", amount)
+        val isRefund = combined.contains("退款")
+        val channelBase = if (pkg == PKG_WECHAT) "微信" else "支付宝"
+        val channel = if (isRefund) "${channelBase}退款" else channelBase
+        val merchant = extractMerchant(title, combined, channelBase)
+        val category = if (isRefund) "退款冲账" else CategoryClassifier.classify("$merchant $combined", rawAmount)
         val timestamp = if (sbn.postTime > 0L) sbn.postTime else System.currentTimeMillis()
-        val formattedAmt = String.format(Locale.US, "%.2f", amount)
-        val dedupKey = "${timestamp}_${pkg}_${formattedAmt}"
+        val formattedAmt = String.format(Locale.US, "%.2f", rawAmount)
+        val prefix = if (isRefund) "ref" else "exp"
+        val dedupKey = "${prefix}_${pkg}_${formattedAmt}"
 
         val record = ExpenseRecord(
-            amount = amount,
+            amount = if (isRefund) -rawAmount else rawAmount,
             merchant = merchant,
             category = category,
             channel = channel,
             timestamp = timestamp,
-            dedupKey = dedupKey
+            dedupKey = dedupKey,
+            isRefund = isRefund
         )
 
         if (PendingQueueStore.enqueueIfNew(applicationContext, record)) {
@@ -111,6 +114,8 @@ class PaymentNotificationService : NotificationListenerService() {
             .replace("支付宝", "")
             .replace("支付成功", "")
             .replace("付款成功", "")
+            .replace("退款到账通知", "")
+            .replace("退款通知", "")
             .trim()
         return if (cleanTitle.length >= 2) cleanTitle.take(20) else "${channel}消费"
     }

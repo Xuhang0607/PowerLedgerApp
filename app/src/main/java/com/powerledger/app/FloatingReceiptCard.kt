@@ -65,7 +65,11 @@ object FloatingReceiptCard {
             }
 
             val summaryText = TextView(appContext).apply {
-                text = "已记 -${record.formattedAmount()} 元 · ${record.merchant} [${record.category}]"
+                text = if (record.isRefund) {
+                    "已冲账 +${record.formattedAmount()} 元 · ${record.merchant} [退款]"
+                } else {
+                    "已记 -${record.formattedAmount()} 元 · ${record.merchant} [${record.category}]"
+                }
                 setTextColor(Color.parseColor("#F9FAFB"))
                 setTextSize(TypedValue.COMPLEX_UNIT_SP, 13f)
                 maxLines = 1

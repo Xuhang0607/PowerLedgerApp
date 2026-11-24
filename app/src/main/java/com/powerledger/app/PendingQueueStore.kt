@@ -13,7 +13,8 @@ data class ExpenseRecord(
     val category: String,
     val channel: String,
     val timestamp: Long,
-    val dedupKey: String
+    val dedupKey: String,
+    val isRefund: Boolean = false
 ) {
     fun toJson(): JSONObject = JSONObject().apply {
         put("id", id)
@@ -23,14 +24,16 @@ data class ExpenseRecord(
         put("channel", channel)
         put("timestamp", timestamp)
         put("dedupKey", dedupKey)
-        put("source", "notification")
+        put("isRefund", isRefund)
+        put("source", if (isRefund) "refund_notification" else "auto")
     }
 
     fun formattedAmount(): String {
-        return if (amount % 1.0 == 0.0) {
-            String.format(Locale.US, "%.0f", amount)
+        val absAmt = kotlin.math.abs(amount)
+        return if (absAmt % 1.0 == 0.0) {
+            String.format(Locale.US, "%.0f", absAmt)
         } else {
-            String.format(Locale.US, "%.2f", amount)
+            String.format(Locale.US, "%.2f", absAmt)
         }
     }
 }
@@ -38,15 +41,25 @@ data class ExpenseRecord(
 object PendingQueueStore {
     private const val PREFS_NAME = "power_ledger_queue_prefs"
     private const val KEY_QUEUE = "pending_records_json"
-    private const val KEY_DEDUP_KEYS = "recent_dedup_keys_json"
-    private const val MAX_DEDUP_HISTORY = 120
+    private const val KEY_RECENT_WINDOW = "recent_dedup_window_json"
+    private const val MAX_DEDUP_HISTORY = 100
+    private const val DEDUP_WINDOW_MS = 20_000L
 
+    /**
+     * 跨通道（通知监听 + 无障碍）统一防重：
+     * 同一包名 + 同一金额 + 同为支出/退款，在 20 秒窗口内只记一次。
+     */
     @Synchronized
     fun enqueueIfNew(context: Context, record: ExpenseRecord): Boolean {
         val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
-        val dedupArray = JSONArray(prefs.getString(KEY_DEDUP_KEYS, "[]") ?: "[]")
-        for (i in 0 until dedupArray.length()) {
-            if (dedupArray.optString(i) == record.dedupKey) {
+        val recentArray = JSONArray(prefs.getString(KEY_RECENT_WINDOW, "[]") ?: "[]")
+        val now = record.timestamp
+
+        for (i in 0 until recentArray.length()) {
+            val item = recentArray.optJSONObject(i) ?: continue
+            val key = item.optString("key")
+            val ts = item.optLong("ts", 0L)
+            if (key == record.dedupKey && kotlin.math.abs(now - ts) < DEDUP_WINDOW_MS) {
                 return false
             }
         }
@@ -54,16 +67,19 @@ object PendingQueueStore {
         val queueArray = JSONArray(prefs.getString(KEY_QUEUE, "[]") ?: "[]")
         queueArray.put(record.toJson())
 
-        val newDedup = JSONArray()
-        val startIdx = (dedupArray.length() - (MAX_DEDUP_HISTORY - 1)).coerceAtLeast(0)
-        for (i in startIdx until dedupArray.length()) {
-            newDedup.put(dedupArray.optString(i))
+        val newRecent = JSONArray()
+        val startIdx = (recentArray.length() - (MAX_DEDUP_HISTORY - 1)).coerceAtLeast(0)
+        for (i in startIdx until recentArray.length()) {
+            newRecent.put(recentArray.optJSONObject(i))
         }
-        newDedup.put(record.dedupKey)
+        newRecent.put(JSONObject().apply {
+            put("key", record.dedupKey)
+            put("ts", now)
+        })
 
         prefs.edit()
             .putString(KEY_QUEUE, queueArray.toString())
-            .putString(KEY_DEDUP_KEYS, newDedup.toString())
+            .putString(KEY_RECENT_WINDOW, newRecent.toString())
             .apply()
         return true
     }

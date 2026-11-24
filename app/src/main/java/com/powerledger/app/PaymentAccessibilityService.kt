@@ -7,8 +7,9 @@ import java.util.Locale
 
 /**
  * 轻量事件驱动无障碍服务：
- * - 通过 accessibility_service_config.xml 严格限定仅监听微信与支付宝包名
- * - 无任何后台轮询线程，仅在支付成功页面出现时提取金额与商户
+ * - 严格限定仅监听微信与支付宝包名，无后台轮询
+ * - 适配扫码支付、付款码被扫与跳转支付成功页，过滤历史账单详情页防止误记
+ * - 与通知监听共用 20 秒同包名+同金额防重键，避免支付宝双触发重复记账
  */
 class PaymentAccessibilityService : AccessibilityService() {
 
@@ -17,17 +18,18 @@ class PaymentAccessibilityService : AccessibilityService() {
         private const val PKG_ALIPAY = "com.eg.android.AlipayGphone"
 
         private val SUCCESS_INDICATORS = listOf(
-            "支付成功", "付款成功", "支付完成", "交易成功", "已支付"
+            "支付成功", "付款成功", "支付完成", "付款完成", "交易成功", "已支付", "已付款"
         )
 
         private val EXCLUDE_INDICATORS = listOf(
-            "已收款", "收款到账", "退款", "红包", "转入", "收益", "还款", "账单明细", "全部账单"
+            "已收款", "收款到账", "退款", "红包", "转入", "收益", "还款",
+            "账单明细", "全部账单", "账单详情", "交易单号", "商户单号", "支付时间", "创建时间", "订单编号"
         )
 
         private val UI_NOISE = setOf(
-            "支付成功", "付款成功", "支付完成", "交易成功", "完成", "确定", "返回",
-            "微信支付", "支付宝", "支付方式", "零钱", "零钱通", "优惠", "商家",
-            "收款方", "付款方式", "订单信息", "查看详情", "电子发票", "积分", "摇一摇"
+            "支付成功", "付款成功", "支付完成", "付款完成", "交易成功", "已支付", "已付款",
+            "完成", "确定", "返回", "微信支付", "支付宝", "支付方式", "零钱", "零钱通",
+            "优惠", "商家", "收款方", "付款方式", "订单信息", "查看详情", "电子发票", "积分", "摇一摇"
         )
 
         private val CURRENCY_REGEX = Regex(
@@ -42,7 +44,7 @@ class PaymentAccessibilityService : AccessibilityService() {
         if (pkg != PKG_WECHAT && pkg != PKG_ALIPAY) return
 
         val now = System.currentTimeMillis()
-        if (now - lastScanTimeMs < 400L) return
+        if (now - lastScanTimeMs < 200L) return
         lastScanTimeMs = now
 
         val root = rootInActiveWindow ?: return
@@ -62,8 +64,7 @@ class PaymentAccessibilityService : AccessibilityService() {
         val category = CategoryClassifier.classify("$merchant $combined", amount)
 
         val formattedAmt = String.format(Locale.US, "%.2f", amount)
-        val bucket = now / 20_000L
-        val dedupKey = "a11y_${bucket}_${pkg}_${formattedAmt}"
+        val dedupKey = "exp_${pkg}_${formattedAmt}"
 
         val record = ExpenseRecord(
             amount = amount,
@@ -111,7 +112,6 @@ class PaymentAccessibilityService : AccessibilityService() {
                 if (value != null && value > 0.0) return value
             }
         }
-        // 兼容微信支付成功页单独一行纯数字（如 "25.58"）且前一行是 "￥" 或 "¥"
         for (i in 0 until texts.size - 1) {
             if (texts[i] == "¥" || texts[i] == "￥") {
                 val value = texts[i + 1].toDoubleOrNull()
