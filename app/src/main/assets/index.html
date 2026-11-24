@@ -470,16 +470,50 @@
     <div id="category-bars"></div>
   </div>
 
-  <!-- 文本补录 & 账单导入 -->
+  <!-- 手动记一笔 & 账单导入 -->
   <div class="card">
-    <div class="section-title">✏️ 快速补录 / 账单导入</div>
-    <textarea id="paste-input" placeholder="粘贴消费通知文本，例如：微信支付：向瑞幸咖啡付款29.50元"></textarea>
-    <div class="row-actions">
-      <button class="btn btn-primary" style="flex:1;" onclick="parseManualText()">✨ 识别记账</button>
-      <label class="file-label">
-        📂 导入账单 (XLSX/CSV)
-        <input type="file" id="csv-file" accept=".csv,.xlsx,.zip,text/csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,*/*" onchange="handleCsvUpload(event)" />
-      </label>
+    <div class="section-title">
+      <span>✏️ 手动记一笔 / 账单导入</span>
+      <button class="pill" style="padding:3px 9px;font-size:11px;" onclick="togglePasteMode()">📋 文本识别</button>
+    </div>
+
+    <!-- 直接输入金额 + 选分类 -->
+    <div id="direct-entry-box">
+      <div style="display:flex;gap:8px;margin-bottom:8px;">
+        <input id="manual-amt" type="number" inputmode="decimal" step="0.01" placeholder="金额（元）"
+          style="flex:1;min-width:0;border:2px solid var(--border);border-radius:14px;padding:9px 10px;font-size:14px;font-weight:700;background:#fffdf8;color:var(--text);outline:none;" />
+        <select id="manual-cat"
+          style="flex:1;border:2px solid var(--border);border-radius:14px;padding:9px 8px;font-size:13px;font-weight:700;background:#fffdf8;color:var(--text);outline:none;">
+          <option value="餐饮">🍜 餐饮</option>
+          <option value="交通">🚕 交通</option>
+          <option value="日用便利">🛒 日用便利</option>
+          <option value="生活缴费">💡 生活缴费</option>
+          <option value="休闲娱乐">🎮 休闲娱乐</option>
+          <option value="转账人情">🧧 转账人情</option>
+          <option value="购物">🛍️ 购物</option>
+        </select>
+      </div>
+      <div style="display:flex;gap:8px;margin-bottom:8px;">
+        <input id="manual-note" type="text" placeholder="商户/备注（选填，如：瑞幸咖啡）"
+          style="flex:1.3;min-width:0;border:2px solid var(--border);border-radius:14px;padding:8px 10px;font-size:13px;background:#fffdf8;color:var(--text);outline:none;" />
+        <input id="manual-date" type="date"
+          style="flex:1;min-width:0;border:2px solid var(--border);border-radius:14px;padding:8px 8px;font-size:12px;background:#fffdf8;color:var(--text);outline:none;" />
+      </div>
+      <div class="row-actions" style="margin-top:0;">
+        <button class="btn btn-primary" style="flex:1;" onclick="addManualDirect()">🐱 记一笔</button>
+        <label class="file-label">
+          📂 导入账单 (XLSX/CSV)
+          <input type="file" id="csv-file" accept=".csv,.xlsx,.zip,text/csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,*/*" onchange="handleCsvUpload(event)" />
+        </label>
+      </div>
+    </div>
+
+    <!-- 备选：粘贴通知文本识别 -->
+    <div id="paste-entry-box" style="display:none;">
+      <textarea id="paste-input" placeholder="粘贴消费通知文本，例如：微信支付：向瑞幸咖啡付款29.50元"></textarea>
+      <div class="row-actions">
+        <button class="btn btn-primary" style="flex:1;" onclick="parseManualText()">✨ 文本识别记账</button>
+      </div>
     </div>
   </div>
 
@@ -719,6 +753,55 @@
       } catch (e) {
         if (manual) showToast('拉取失败');
       }
+    }
+
+    function togglePasteMode() {
+      const d = document.getElementById('direct-entry-box');
+      const p = document.getElementById('paste-entry-box');
+      const showPaste = p.style.display === 'none';
+      p.style.display = showPaste ? 'block' : 'none';
+      d.style.display = showPaste ? 'none' : 'block';
+    }
+
+    function addManualDirect() {
+      const amtEl = document.getElementById('manual-amt');
+      const catEl = document.getElementById('manual-cat');
+      const noteEl = document.getElementById('manual-note');
+      const dateEl = document.getElementById('manual-date');
+
+      const amount = parseFloat(amtEl.value);
+      if (!amount || amount <= 0) {
+        showToast('请输入大于 0 的金额');
+        return;
+      }
+      const category = catEl.value || '餐饮';
+      const merchant = (noteEl.value || '').trim() || (category + '消费');
+
+      let ts = Date.now();
+      if (dateEl.value) {
+        const now = new Date();
+        const parts = dateEl.value.split('-').map(Number);
+        if (parts.length === 3) {
+          ts = new Date(parts[0], parts[1] - 1, parts[2], now.getHours(), now.getMinutes(), now.getSeconds()).getTime();
+        }
+      }
+
+      records.unshift({
+        id: 'manual_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6),
+        amount,
+        merchant: merchant.slice(0, 24),
+        category,
+        channel: '手动记账',
+        timestamp: ts,
+        source: 'manual'
+      });
+      records.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
+      saveRecords();
+      amtEl.value = '';
+      noteEl.value = '';
+      cursorDate = new Date(ts);
+      render();
+      showToast(`已记 -${amount.toFixed(2)} 元 [${category}]`);
     }
 
     function parseManualText() {
