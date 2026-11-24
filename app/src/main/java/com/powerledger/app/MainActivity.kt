@@ -1,12 +1,9 @@
 package com.powerledger.app
 
 import android.annotation.SuppressLint
-import android.content.ComponentName
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
-import android.provider.Settings
-import android.webkit.JavascriptInterface
 import android.webkit.ValueCallback
 import android.webkit.WebChromeClient
 import android.webkit.WebView
@@ -49,7 +46,6 @@ class MainActivity : AppCompatActivity() {
             allowContentAccess = true
         }
 
-        webView.addJavascriptInterface(PowerLedgerBridge(), "PowerLedgerNative")
         webView.webViewClient = WebViewClient()
         webView.webChromeClient = object : WebChromeClient() {
             override fun onShowFileChooser(
@@ -81,7 +77,6 @@ class MainActivity : AppCompatActivity() {
         if (::webView.isInitialized) {
             webView.onResume()
             webView.resumeTimers()
-            webView.evaluateJavascript("window.onNativeResume && window.onNativeResume()", null)
         }
     }
 
@@ -100,85 +95,5 @@ class MainActivity : AppCompatActivity() {
             webView.destroy()
         }
         super.onDestroy()
-    }
-
-    inner class PowerLedgerBridge {
-        @JavascriptInterface
-        fun pullPendingRecords(): String {
-            return PendingQueueStore.pullAndClearAll(applicationContext)
-        }
-
-        @JavascriptInterface
-        fun getDebugLogs(): String {
-            return PendingQueueStore.getDebugLogs(applicationContext)
-        }
-
-        @JavascriptInterface
-        fun openNotificationSettings() {
-            runOnUiThread {
-                val intent = Intent(Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS).apply {
-                    addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                }
-                startActivity(intent)
-            }
-        }
-
-        @JavascriptInterface
-        fun openOverlaySettings() {
-            runOnUiThread {
-                val intent = Intent(
-                    Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
-                    Uri.parse("package:$packageName")
-                ).apply {
-                    addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                }
-                startActivity(intent)
-            }
-        }
-
-        @JavascriptInterface
-        fun openAccessibilitySettings() {
-            runOnUiThread {
-                val intent = Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS).apply {
-                    addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                }
-                startActivity(intent)
-            }
-        }
-
-        @JavascriptInterface
-        fun isNotificationServiceEnabled(): Boolean {
-            val enabledListeners = Settings.Secure.getString(
-                contentResolver,
-                "enabled_notification_listeners"
-            ) ?: return false
-            val target = ComponentName(this@MainActivity, PaymentNotificationService::class.java)
-            return enabledListeners.split(":").any {
-                ComponentName.unflattenFromString(it) == target
-            }
-        }
-
-        @JavascriptInterface
-        fun isAccessibilityServiceEnabled(): Boolean {
-            val enabled = Settings.Secure.getInt(
-                contentResolver,
-                Settings.Secure.ACCESSIBILITY_ENABLED,
-                0
-            )
-            if (enabled != 1) return false
-            val services = Settings.Secure.getString(
-                contentResolver,
-                Settings.Secure.ENABLED_ACCESSIBILITY_SERVICES
-            ) ?: return false
-            val target = ComponentName(this@MainActivity, PaymentAccessibilityService::class.java)
-            return services.split(":").any {
-                ComponentName.unflattenFromString(it) == target
-            }
-        }
-
-        @JavascriptInterface
-        fun canDrawOverlays(): Boolean {
-            return Settings.canDrawOverlays(this@MainActivity)
-        }
     }
 }
