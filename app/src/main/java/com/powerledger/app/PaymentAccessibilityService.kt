@@ -18,7 +18,8 @@ class PaymentAccessibilityService : AccessibilityService() {
         private const val PKG_ALIPAY = "com.eg.android.AlipayGphone"
 
         private val SUCCESS_INDICATORS = listOf(
-            "支付成功", "付款成功", "支付完成", "付款完成", "交易成功", "已支付", "已付款"
+            "支付成功", "付款成功", "支付完成", "付款完成", "交易成功", "已支付", "已付款",
+            "转账成功", "待朋友收款", "已转账"
         )
 
         private val EXCLUDE_INDICATORS = listOf(
@@ -28,6 +29,7 @@ class PaymentAccessibilityService : AccessibilityService() {
 
         private val UI_NOISE = setOf(
             "支付成功", "付款成功", "支付完成", "付款完成", "交易成功", "已支付", "已付款",
+            "转账成功", "待朋友收款", "已转账", "微信转账",
             "完成", "确定", "返回", "微信支付", "支付宝", "支付方式", "零钱", "零钱通",
             "优惠", "商家", "收款方", "付款方式", "订单信息", "查看详情", "电子发票", "积分", "摇一摇"
         )
