@@ -19,7 +19,7 @@ class PaymentAccessibilityService : AccessibilityService() {
 
         private val SUCCESS_INDICATORS = listOf(
             "支付成功", "付款成功", "支付完成", "付款完成", "交易成功", "已支付", "已付款",
-            "转账成功", "待朋友收款", "已转账"
+            "转账成功", "待朋友收款", "已转账", "确认收款"
         )
 
         private val EXCLUDE_INDICATORS = listOf(
@@ -39,7 +39,7 @@ class PaymentAccessibilityService : AccessibilityService() {
         )
     }
 
-    private var lastScanTimeMs = 0L
+    private var lastContentScanMs = 0L
 
     override fun onAccessibilityEvent(event: AccessibilityEvent?) {
         val pkg = event?.packageName?.toString() ?: return
@@ -47,8 +47,13 @@ class PaymentAccessibilityService : AccessibilityService() {
 
         val now = System.currentTimeMillis()
         val isWindowSwitch = event.eventType == AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED
-        if (!isWindowSwitch && now - lastScanTimeMs < 450L) return
-        lastScanTimeMs = now
+        if (isWindowSwitch) {
+            // 新页面刚打开时重置内容节流，确保紧随其后的首帧渲染必定被扫描
+            lastContentScanMs = 0L
+        } else {
+            if (now - lastContentScanMs < 350L) return
+            lastContentScanMs = now
+        }
 
         val root = rootInActiveWindow ?: return
         val texts = ArrayList<String>(40)
@@ -136,6 +141,10 @@ class PaymentAccessibilityService : AccessibilityService() {
 
         for (candidate in searchRange) {
             val clean = candidate.trim()
+            val waitMatch = Regex("^待(.{1,20}?)确认收款$").find(clean)
+            if (waitMatch != null) {
+                return "转账给" + waitMatch.groupValues[1].trim()
+            }
             if (clean.length in 2..24 &&
                 clean !in UI_NOISE &&
                 !clean.startsWith("¥") &&

@@ -29,7 +29,7 @@ object CategoryClassifier {
     )
 
     private val transferKeywords = listOf(
-        "微信转账", "支付宝转账", "转账", "扫二维码付款", "二维码收款", "发红包", "亲属卡"
+        "微信转账", "支付宝转账", "转账", "确认收款", "待朋友收款", "扫二维码付款", "二维码收款", "发红包", "亲属卡"
     )
 
     private val platformKeywords = listOf(
