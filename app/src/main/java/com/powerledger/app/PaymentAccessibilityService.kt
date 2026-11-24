@@ -41,6 +41,11 @@ class PaymentAccessibilityService : AccessibilityService() {
 
     private var lastContentScanMs = 0L
 
+    override fun onServiceConnected() {
+        super.onServiceConnected()
+        PendingQueueStore.appendDebugLog(applicationContext, "服务已连接")
+    }
+
     override fun onAccessibilityEvent(event: AccessibilityEvent?) {
         val pkg = event?.packageName?.toString() ?: return
         if (pkg != PKG_WECHAT && pkg != PKG_ALIPAY) return
@@ -48,24 +53,31 @@ class PaymentAccessibilityService : AccessibilityService() {
         val now = System.currentTimeMillis()
         val isWindowSwitch = event.eventType == AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED
         if (isWindowSwitch) {
-            // 新页面刚打开时重置内容节流，确保紧随其后的首帧渲染必定被扫描
             lastContentScanMs = 0L
         } else {
             if (now - lastContentScanMs < 350L) return
             lastContentScanMs = now
         }
 
-        val root = rootInActiveWindow ?: return
-        val texts = ArrayList<String>(40)
-        collectTexts(root, texts, maxNodes = 100)
+        val root = rootInActiveWindow ?: event.source ?: return
+        val texts = ArrayList<String>(48)
+        collectTexts(root, texts, maxNodes = 250)
         if (texts.isEmpty()) return
 
         val combined = texts.joinToString(" ")
         if (SUCCESS_INDICATORS.none { combined.contains(it) }) return
-        if (EXCLUDE_INDICATORS.any { combined.contains(it) }) return
 
-        val amount = extractAmount(texts) ?: return
-        if (amount <= 0.0) return
+        val hitExclude = EXCLUDE_INDICATORS.firstOrNull { combined.contains(it) }
+        if (hitExclude != null) {
+            PendingQueueStore.appendDebugLog(applicationContext, "排除($hitExclude): ${combined.take(40)}")
+            return
+        }
+
+        val amount = extractAmount(texts)
+        if (amount == null || amount <= 0.0) {
+            PendingQueueStore.appendDebugLog(applicationContext, "未识别金额: ${combined.take(50)}")
+            return
+        }
 
         val channel = if (pkg == PKG_WECHAT) "微信" else "支付宝"
         val merchant = extractMerchant(texts, channel)
@@ -83,7 +95,12 @@ class PaymentAccessibilityService : AccessibilityService() {
             dedupKey = dedupKey
         )
 
-        if (PendingQueueStore.enqueueIfNew(applicationContext, record)) {
+        val added = PendingQueueStore.enqueueIfNew(applicationContext, record)
+        PendingQueueStore.appendDebugLog(
+            applicationContext,
+            if (added) "入账: $merchant -$formattedAmt [$category]" else "防重跳过: $merchant -$formattedAmt"
+        )
+        if (added) {
             FloatingReceiptCard.show(applicationContext, record)
         }
     }
@@ -93,7 +110,7 @@ class PaymentAccessibilityService : AccessibilityService() {
     }
 
     private fun collectTexts(node: AccessibilityNodeInfo, out: MutableList<String>, maxNodes: Int) {
-        if (out.size >= maxNodes) return
+        if (out.size >= maxNodes || !node.isVisibleToUser) return
         val t = node.text?.toString()?.trim()
         if (!t.isNullOrEmpty()) {
             out.add(t)

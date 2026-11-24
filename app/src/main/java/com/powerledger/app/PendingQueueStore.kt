@@ -42,8 +42,28 @@ object PendingQueueStore {
     private const val PREFS_NAME = "power_ledger_queue_prefs"
     private const val KEY_QUEUE = "pending_records_json"
     private const val KEY_RECENT_WINDOW = "recent_dedup_window_json"
+    private const val KEY_DEBUG_LOGS = "debug_logs_json"
     private const val MAX_DEDUP_HISTORY = 100
     private const val DEDUP_WINDOW_MS = 20_000L
+
+    @Synchronized
+    fun appendDebugLog(context: Context, line: String) {
+        val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+        val arr = JSONArray(prefs.getString(KEY_DEBUG_LOGS, "[]") ?: "[]")
+        val next = JSONArray()
+        val start = (arr.length() - 9).coerceAtLeast(0)
+        for (i in start until arr.length()) {
+            next.put(arr.optString(i))
+        }
+        next.put(line)
+        prefs.edit().putString(KEY_DEBUG_LOGS, next.toString()).apply()
+    }
+
+    @Synchronized
+    fun getDebugLogs(context: Context): String {
+        val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+        return prefs.getString(KEY_DEBUG_LOGS, "[]") ?: "[]"
+    }
 
     /**
      * 跨通道（通知监听 + 无障碍）统一防重：

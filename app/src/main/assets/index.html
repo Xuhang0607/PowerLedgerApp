@@ -423,7 +423,8 @@
         <span id="dot-overlay" class="dot"></span>悬浮窗权限
       </button>
       <button class="btn btn-mint" onclick="pullNativeQueue(true)">🔄 立即拉取队列</button>
-      <button class="btn btn-danger" style="grid-column: span 2;" onclick="clearAllData()">🗑️ 清空数据</button>
+      <button class="btn" onclick="showDebugLogs()">🩺 诊断日志</button>
+      <button class="btn btn-danger" onclick="clearAllData()">🗑️ 清空数据</button>
     </div>
   </div>
 
@@ -731,6 +732,19 @@
         window.PowerLedgerNative.openOverlaySettings();
       } else {
         showToast('请在 Android 客户端中操作');
+      }
+    }
+
+    function showDebugLogs() {
+      if (!window.PowerLedgerNative) {
+        showToast('当前为浏览器预览环境');
+        return;
+      }
+      try {
+        const logs = JSON.parse(window.PowerLedgerNative.getDebugLogs() || '[]');
+        alert(logs.length ? logs.join('\n') : '暂无无障碍事件日志（请确认已在系统设置开启无障碍服务）');
+      } catch (e) {
+        showToast('读取日志失败');
       }
     }
 

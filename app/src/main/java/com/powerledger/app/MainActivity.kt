@@ -109,6 +109,11 @@ class MainActivity : AppCompatActivity() {
         }
 
         @JavascriptInterface
+        fun getDebugLogs(): String {
+            return PendingQueueStore.getDebugLogs(applicationContext)
+        }
+
+        @JavascriptInterface
         fun openNotificationSettings() {
             runOnUiThread {
                 val intent = Intent(Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS).apply {
