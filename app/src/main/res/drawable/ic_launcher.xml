@@ -3,10 +3,58 @@
     android:height="108dp"
     android:viewportWidth="108"
     android:viewportHeight="108">
+    <!-- 奶油黄圆角背景 -->
     <path
-        android:fillColor="#111827"
+        android:fillColor="#FFF3C4"
         android:pathData="M24,0 L84,0 A24,24 0 0,1 108,24 L108,84 A24,24 0 0,1 84,108 L24,108 A24,24 0 0,1 0,84 L0,24 A24,24 0 0,1 24,0 Z" />
+    <!-- 底部阴影 -->
     <path
-        android:fillColor="#10B981"
-        android:pathData="M58,22 L34,58 L52,58 L48,86 L74,48 L56,48 Z" />
+        android:fillColor="#FDE68A"
+        android:pathData="M26,86 A28,6 0 1,0 82,86 A28,6 0 1,0 26,86 Z" />
+    <!-- 卡通小猪存钱罐耳朵 -->
+    <path
+        android:fillColor="#FF9EBB"
+        android:pathData="M26,38 L22,22 L38,28 Z" />
+    <path
+        android:fillColor="#FF9EBB"
+        android:pathData="M82,38 L86,22 L70,28 Z" />
+    <!-- 卡通小猪圆滚滚身体 -->
+    <path
+        android:fillColor="#FFB3C6"
+        android:pathData="M22,56 A32,27 0 1,0 86,56 A32,27 0 1,0 22,56 Z" />
+    <!-- 投币口 -->
+    <path
+        android:fillColor="#7C2D12"
+        android:pathData="M45,33 L63,33 A2,2 0 0,1 63,37 L45,37 A2,2 0 0,1 45,33 Z" />
+    <!-- 金币 -->
+    <path
+        android:fillColor="#FBBF24"
+        android:pathData="M46,24 A8,8 0 1,0 62,24 A8,8 0 1,0 46,24 Z" />
+    <path
+        android:fillColor="#FEF08A"
+        android:pathData="M51,20 L57,20 L57,28 L51,28 Z" />
+    <!-- 猪鼻子 -->
+    <path
+        android:fillColor="#FF7597"
+        android:pathData="M43,60 A11,8 0 1,0 65,60 A11,8 0 1,0 43,60 Z" />
+    <path
+        android:fillColor="#7C2D12"
+        android:pathData="M48,60 A2,2.5 0 1,0 52,60 A2,2.5 0 1,0 48,60 Z" />
+    <path
+        android:fillColor="#7C2D12"
+        android:pathData="M56,60 A2,2.5 0 1,0 60,60 A2,2.5 0 1,0 56,60 Z" />
+    <!-- 弯弯笑眼 -->
+    <path
+        android:fillColor="#1F2937"
+        android:pathData="M35,51 A3,3 0 1,0 41,51 A3,3 0 1,0 35,51 Z" />
+    <path
+        android:fillColor="#1F2937"
+        android:pathData="M67,51 A3,3 0 1,0 73,51 A3,3 0 1,0 67,51 Z" />
+    <!-- 腮红 -->
+    <path
+        android:fillColor="#FB7185"
+        android:pathData="M28,60 A4.5,3 0 1,0 37,60 A4.5,3 0 1,0 28,60 Z" />
+    <path
+        android:fillColor="#FB7185"
+        android:pathData="M71,60 A4.5,3 0 1,0 80,60 A4.5,3 0 1,0 71,60 Z" />
 </vector>
