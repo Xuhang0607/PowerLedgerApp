@@ -6,19 +6,19 @@
   <title>喵记账</title>
   <style>
     :root {
-      --bg: #f4f5f7;
+      --bg: #f5f6f8;
       --card: #ffffff;
-      --ink: #18181b;
+      --brand: #10b981;
+      --brand-dark: #059669;
       --text: #1f2937;
-      --muted: #8b929e;
-      --line: #eef0f4;
-      --accent: #10b981;
+      --muted: #8c93a0;
+      --line: #f0f2f5;
       --danger: #ef4444;
     }
     * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
     body {
       margin: 0;
-      padding: 12px 14px 88px;
+      padding: 0 0 74px;
       font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "HarmonyOS Sans", "Segoe UI", Roboto, sans-serif;
       background: var(--bg);
       color: var(--text);
@@ -28,174 +28,131 @@
     }
     .num { font-variant-numeric: tabular-nums; }
 
-    /* 顶栏 */
-    .topbar {
+    /* 顶部品牌色主卡（钱迹/一木记账风格） */
+    .header-bg {
+      background: linear-gradient(180deg, #10b981 0%, #0ea472 100%);
+      color: #fff;
+      padding: 12px 16px 20px;
+      border-radius: 0 0 20px 20px;
+    }
+    .top-row {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      padding: 4px 2px 12px;
+      margin-bottom: 14px;
     }
     .brand {
       display: flex;
       align-items: center;
-      gap: 8px;
+      gap: 7px;
+      font-size: 16px;
+      font-weight: 700;
     }
-    .brand-icon {
-      width: 28px;
-      height: 28px;
-      border-radius: 9px;
-      background: #fff3c4;
+    .brand-dot {
+      width: 24px;
+      height: 24px;
+      border-radius: 8px;
+      background: rgba(255,255,255,0.22);
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 16px;
+      font-size: 14px;
     }
-    .brand-name {
-      font-size: 18px;
-      font-weight: 700;
-      color: var(--ink);
-      letter-spacing: -0.3px;
+    .top-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
     }
-    .topbar-action {
-      border: none;
-      background: transparent;
-      color: var(--muted);
-      font-size: 13px;
-      font-weight: 500;
-      padding: 6px 8px;
-      cursor: pointer;
-    }
-
-    /* 周期切换 */
-    .seg {
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      background: #e9ecf0;
-      padding: 3px;
-      border-radius: 10px;
-      margin-bottom: 10px;
-    }
-    .seg-btn {
-      border: none;
-      background: transparent;
-      padding: 6px 0;
-      border-radius: 8px;
-      font-size: 12.5px;
-      font-weight: 600;
-      color: #64748b;
-      cursor: pointer;
-    }
-    .seg-btn.active {
-      background: #fff;
-      color: var(--ink);
-      box-shadow: 0 1px 2px rgba(0,0,0,0.06);
-    }
-
-    /* 深色汇总卡（钱迹/极简账本风格） */
-    .hero {
-      background: var(--ink);
+    .hdr-pill {
+      background: rgba(255,255,255,0.18);
+      border: 1px solid rgba(255,255,255,0.28);
       color: #fff;
-      border-radius: 16px;
-      padding: 16px;
-      margin-bottom: 12px;
+      border-radius: 999px;
+      padding: 5px 11px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
     }
-    .hero-top {
+    .hdr-pill input { display: none; }
+
+    .period-row {
       display: flex;
       justify-content: space-between;
       align-items: center;
       margin-bottom: 10px;
     }
-    .hero-period {
+    .period-switcher {
       display: flex;
       align-items: center;
-      gap: 10px;
-      font-size: 13px;
-      color: #d4d4d8;
-      font-weight: 500;
+      gap: 8px;
+      font-size: 14px;
+      font-weight: 600;
     }
-    .nav-btn {
-      border: 1px solid #3f3f46;
-      background: #27272a;
-      color: #e4e4e7;
-      border-radius: 6px;
+    .p-arrow {
       width: 24px;
       height: 24px;
-      font-size: 12px;
+      border-radius: 50%;
+      border: none;
+      background: rgba(255,255,255,0.2);
+      color: #fff;
+      font-size: 13px;
       cursor: pointer;
       display: inline-flex;
       align-items: center;
       justify-content: center;
     }
-    .hero-label {
-      font-size: 12px;
-      color: #a1a1aa;
+    .mode-pills {
+      display: flex;
+      background: rgba(0,0,0,0.12);
+      border-radius: 999px;
+      padding: 2px;
     }
-    .hero-amount {
-      font-size: 30px;
-      font-weight: 700;
-      letter-spacing: -0.6px;
-      margin: 2px 0 14px;
+    .mode-pill {
+      border: none;
+      background: transparent;
+      color: rgba(255,255,255,0.8);
+      font-size: 11.5px;
+      font-weight: 600;
+      padding: 3px 9px;
+      border-radius: 999px;
+      cursor: pointer;
     }
-    .hero-metrics {
+    .mode-pill.active {
+      background: #fff;
+      color: var(--brand-dark);
+    }
+
+    .main-amt-label { font-size: 12px; color: rgba(255,255,255,0.85); }
+    .main-amt { font-size: 32px; font-weight: 700; letter-spacing: -0.6px; margin: 2px 0 12px; }
+    .sub-metrics {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
-      border-top: 1px solid #27272a;
-      padding-top: 10px;
-      gap: 8px;
+      background: rgba(255,255,255,0.13);
+      border-radius: 12px;
+      padding: 9px 10px;
+      gap: 6px;
     }
-    .metric-k { font-size: 11px; color: #a1a1aa; }
-    .metric-v { font-size: 13.5px; font-weight: 600; margin-top: 2px; color: #f4f4f5; }
+    .sub-k { font-size: 11px; color: rgba(255,255,255,0.8); }
+    .sub-v { font-size: 13.5px; font-weight: 600; margin-top: 1px; }
 
-    /* 通用白卡片 */
+    /* 内容容器 */
+    .container { padding: 12px 12px 0; }
     .card {
       background: var(--card);
       border-radius: 14px;
-      padding: 14px;
-      margin-bottom: 12px;
+      padding: 13px 14px;
+      margin-bottom: 10px;
+      box-shadow: 0 1px 4px rgba(17,24,39,0.03);
     }
-    .card-title {
+    .card-hdr {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
       font-size: 13.5px;
       font-weight: 600;
-      color: var(--ink);
-      margin-bottom: 12px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-
-    /* 分类占比 */
-    .cat-item { margin-bottom: 11px; }
-    .cat-item:last-child { margin-bottom: 0; }
-    .cat-row {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      font-size: 12.5px;
-      margin-bottom: 5px;
-    }
-    .cat-name {
-      display: flex;
-      align-items: center;
-      gap: 7px;
-      font-weight: 500;
-    }
-    .cat-dot {
-      width: 8px;
-      height: 8px;
-      border-radius: 50%;
-    }
-    .cat-val { color: var(--text); font-weight: 600; }
-    .cat-pct { color: var(--muted); font-weight: 400; margin-left: 4px; font-size: 11.5px; }
-    .bar-bg {
-      height: 6px;
-      background: #f1f3f6;
-      border-radius: 999px;
-      overflow: hidden;
-    }
-    .bar-fill {
-      height: 100%;
-      border-radius: 999px;
-      transition: width 0.25s ease;
+      margin-bottom: 10px;
     }
 
     /* 筛选条 */
@@ -203,129 +160,182 @@
       display: flex;
       gap: 6px;
       overflow-x: auto;
-      padding-bottom: 2px;
-      margin-bottom: 10px;
+      padding: 2px 0 6px;
       scrollbar-width: none;
     }
     .filters::-webkit-scrollbar { display: none; }
     .chip {
-      padding: 5px 11px;
+      padding: 5px 12px;
       border-radius: 999px;
-      border: 1px solid var(--line);
-      background: #f8f9fb;
-      color: #64748b;
+      border: none;
+      background: #fff;
+      color: #6b7280;
       font-size: 12px;
       font-weight: 500;
       white-space: nowrap;
       cursor: pointer;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.04);
     }
     .chip.active {
-      background: var(--ink);
+      background: var(--brand);
       color: #fff;
-      border-color: var(--ink);
+      font-weight: 600;
     }
 
-    /* 按天分组明细 */
+    /* 按天分组卡片 */
+    .day-card {
+      background: #fff;
+      border-radius: 14px;
+      margin-bottom: 10px;
+      overflow: hidden;
+      box-shadow: 0 1px 4px rgba(17,24,39,0.03);
+    }
     .day-hdr {
       display: flex;
       justify-content: space-between;
-      font-size: 11.5px;
-      color: var(--muted);
-      padding: 10px 0 6px;
+      padding: 9px 14px;
+      background: #fafbfc;
       border-bottom: 1px solid var(--line);
+      font-size: 12px;
+      color: var(--muted);
+      font-weight: 500;
     }
-    .day-hdr:first-child { padding-top: 2px; }
     .tx-row {
       display: flex;
       align-items: center;
-      gap: 10px;
-      padding: 11px 0;
+      gap: 11px;
+      padding: 11px 14px;
       border-bottom: 1px solid var(--line);
       cursor: pointer;
     }
-    .tx-row:last-child { border-bottom: none; padding-bottom: 2px; }
-    .tx-row:active { background: #fafafa; }
-    .tx-badge {
-      width: 34px;
-      height: 34px;
-      border-radius: 10px;
+    .tx-row:last-child { border-bottom: none; }
+    .tx-row:active { background: #f9fafb; }
+    .tx-ico {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 13px;
-      font-weight: 700;
-      color: #fff;
       flex-shrink: 0;
     }
+    .tx-ico svg { width: 18px; height: 18px; }
     .tx-mid { flex: 1; min-width: 0; }
     .tx-title {
       font-size: 14px;
       font-weight: 500;
-      color: var(--ink);
+      color: #111827;
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
     }
-    .tx-meta {
+    .tx-sub {
       font-size: 11.5px;
       color: var(--muted);
       margin-top: 2px;
     }
-    .tx-right { text-align: right; flex-shrink: 0; }
-    .tx-amt { font-size: 15px; font-weight: 600; color: var(--ink); }
-    .tx-cat { font-size: 11px; color: var(--muted); margin-top: 1px; }
+    .tx-amt {
+      font-size: 15px;
+      font-weight: 600;
+      color: #111827;
+      flex-shrink: 0;
+    }
+
+    /* 图表页 */
+    .donut-wrap {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      padding: 4px 0;
+    }
+    .legend { flex: 1; }
+    .leg-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 12px;
+      margin-bottom: 6px;
+    }
+    .leg-row:last-child { margin-bottom: 0; }
+    .leg-l { display: flex; align-items: center; gap: 6px; color: var(--text); }
+    .leg-dot { width: 8px; height: 8px; border-radius: 50%; }
+    .rank-row { margin-bottom: 11px; }
+    .rank-row:last-child { margin-bottom: 0; }
+    .rank-top {
+      display: flex;
+      justify-content: space-between;
+      font-size: 12.5px;
+      margin-bottom: 5px;
+    }
+    .bar-bg { height: 6px; background: #f1f3f6; border-radius: 999px; overflow: hidden; }
+    .bar-fill { height: 100%; border-radius: 999px; }
 
     .empty {
       text-align: center;
       color: var(--muted);
-      padding: 28px 0;
+      padding: 40px 16px;
       font-size: 13px;
     }
 
-    /* 底部固定操作栏 */
-    .bottom-bar {
+    /* 经典三段式底部导航（明细 | + | 图表） */
+    .tabbar {
       position: fixed;
       left: 0;
       right: 0;
       bottom: 0;
-      background: rgba(255, 255, 255, 0.96);
-      backdrop-filter: blur(8px);
-      border-top: 1px solid var(--line);
-      padding: 10px 14px;
-      display: flex;
-      gap: 10px;
-      z-index: 50;
-    }
-    .btn-import {
-      flex: 1;
-      text-align: center;
-      padding: 11px 12px;
-      border-radius: 12px;
-      border: 1px solid #d1d5db;
+      height: 58px;
       background: #fff;
-      color: var(--ink);
-      font-size: 13.5px;
-      font-weight: 600;
-      cursor: pointer;
+      border-top: 1px solid #ebedf0;
+      display: grid;
+      grid-template-columns: 1fr 72px 1fr;
+      align-items: center;
+      z-index: 40;
     }
-    .btn-import input { display: none; }
-    .btn-add {
-      flex: 1.3;
-      padding: 11px 12px;
-      border-radius: 12px;
+    .tab-item {
       border: none;
-      background: var(--ink);
-      color: #fff;
-      font-size: 13.5px;
+      background: transparent;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 2px;
+      color: #9ca3af;
+      font-size: 11px;
       font-weight: 600;
       cursor: pointer;
+      height: 100%;
     }
+    .tab-item.active { color: var(--brand-dark); }
+    .tab-item svg { width: 20px; height: 20px; }
+    .fab-wrap {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      position: relative;
+    }
+    .fab {
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      border: 4px solid #fff;
+      background: var(--brand);
+      color: #fff;
+      font-size: 26px;
+      line-height: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 4px 12px rgba(16,185,129,0.35);
+      transform: translateY(-10px);
+      cursor: pointer;
+    }
+    .fab:active { transform: translateY(-9px) scale(0.96); }
 
     /* 底部弹窗 Sheet */
     .mask {
       position: fixed;
       inset: 0;
-      background: rgba(0, 0, 0, 0.4);
+      background: rgba(0,0,0,0.42);
       z-index: 100;
       display: none;
       align-items: flex-end;
@@ -336,7 +346,7 @@
       background: #fff;
       border-radius: 18px 18px 0 0;
       padding: 16px 16px 24px;
-      max-height: 85vh;
+      max-height: 86vh;
       overflow-y: auto;
     }
     .sheet-hdr {
@@ -345,37 +355,40 @@
       align-items: center;
       margin-bottom: 14px;
     }
-    .sheet-title { font-size: 15px; font-weight: 700; color: var(--ink); }
+    .sheet-title { font-size: 15.5px; font-weight: 700; }
     .sheet-close {
       border: none;
       background: #f3f4f6;
       color: #4b5563;
       border-radius: 999px;
-      padding: 4px 10px;
+      padding: 5px 11px;
       font-size: 12px;
       cursor: pointer;
     }
     .cat-grid {
       display: grid;
       grid-template-columns: repeat(4, 1fr);
-      gap: 8px;
-      margin-bottom: 12px;
+      gap: 10px;
+      margin-bottom: 14px;
     }
-    .cat-opt {
-      padding: 9px 4px;
-      border-radius: 10px;
-      border: 1px solid var(--line);
-      background: #f9fafb;
-      font-size: 12px;
-      font-weight: 600;
-      text-align: center;
-      color: var(--text);
+    .cat-cell {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 5px;
+      padding: 8px 4px;
+      border-radius: 12px;
+      border: 1.5px solid transparent;
+      background: #f8f9fb;
       cursor: pointer;
+      font-size: 11.5px;
+      font-weight: 600;
+      color: var(--text);
     }
-    .cat-opt.selected {
-      background: var(--ink);
-      color: #fff;
-      border-color: var(--ink);
+    .cat-cell.selected {
+      border-color: var(--brand);
+      background: #ecfdf5;
+      color: var(--brand-dark);
     }
     .field {
       width: 100%;
@@ -388,22 +401,22 @@
       margin-bottom: 10px;
       font-family: inherit;
     }
-    .field:focus { border-color: var(--ink); background: #fff; }
-    .btn-full {
+    .field:focus { border-color: var(--brand); background: #fff; }
+    .btn-save {
       width: 100%;
       padding: 12px;
-      border-radius: 11px;
+      border-radius: 12px;
       border: none;
-      background: var(--ink);
+      background: var(--brand);
       color: #fff;
-      font-size: 14px;
+      font-size: 14.5px;
       font-weight: 600;
       cursor: pointer;
     }
     .btn-del {
       width: 100%;
       padding: 11px;
-      border-radius: 11px;
+      border-radius: 12px;
       border: 1px solid #fecaca;
       background: #fef2f2;
       color: var(--danger);
@@ -417,9 +430,9 @@
       top: 16px;
       left: 50%;
       transform: translateX(-50%);
-      background: rgba(24, 24, 27, 0.92);
+      background: rgba(17,24,39,0.9);
       color: #fff;
-      padding: 8px 14px;
+      padding: 8px 15px;
       border-radius: 999px;
       font-size: 12.5px;
       z-index: 200;
@@ -429,64 +442,80 @@
   </style>
 </head>
 <body>
-  <div class="topbar">
-    <div class="brand">
-      <div class="brand-icon">🐱</div>
-      <div class="brand-name">喵记账</div>
+  <!-- 顶部主概览区 -->
+  <div class="header-bg">
+    <div class="top-row">
+      <div class="brand">
+        <div class="brand-dot">🐱</div>
+        <span>喵记账</span>
+      </div>
+      <div class="top-actions">
+        <label class="hdr-pill">
+          导入账单
+          <input type="file" id="csv-file" accept=".csv,.xlsx,.zip,text/csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,*/*" onchange="handleFileUpload(event)" />
+        </label>
+        <button class="hdr-pill" onclick="clearAllData()">清空</button>
+      </div>
     </div>
-    <button class="topbar-action" onclick="clearAllData()">清空数据</button>
-  </div>
 
-  <div class="seg">
-    <button class="seg-btn" id="tab-day" onclick="setPeriodMode('day')">日</button>
-    <button class="seg-btn active" id="tab-month" onclick="setPeriodMode('month')">月</button>
-    <button class="seg-btn" id="tab-year" onclick="setPeriodMode('year')">年</button>
-    <button class="seg-btn" id="tab-all" onclick="setPeriodMode('all')">全部</button>
-  </div>
-
-  <div class="hero">
-    <div class="hero-top">
-      <div class="hero-label" id="total-label">本月支出</div>
-      <div class="hero-period" id="period-nav">
-        <button class="nav-btn" onclick="shiftPeriod(-1)">‹</button>
+    <div class="period-row">
+      <div class="period-switcher" id="period-nav">
+        <button class="p-arrow" onclick="shiftPeriod(-1)">‹</button>
         <span id="period-label" class="num">2026年11月</span>
-        <button class="nav-btn" onclick="shiftPeriod(1)">›</button>
+        <button class="p-arrow" onclick="shiftPeriod(1)">›</button>
+      </div>
+      <div class="mode-pills">
+        <button class="mode-pill" id="tab-day" onclick="setPeriodMode('day')">日</button>
+        <button class="mode-pill active" id="tab-month" onclick="setPeriodMode('month')">月</button>
+        <button class="mode-pill" id="tab-year" onclick="setPeriodMode('year')">年</button>
+        <button class="mode-pill" id="tab-all" onclick="setPeriodMode('all')">全部</button>
       </div>
     </div>
-    <div class="hero-amount num" id="total-amount">¥0.00</div>
-    <div class="hero-metrics">
-      <div>
-        <div class="metric-k">笔数</div>
-        <div class="metric-v num" id="stat-count">0 笔</div>
-      </div>
-      <div>
-        <div class="metric-k">日均</div>
-        <div class="metric-v num" id="stat-avg">¥0.00</div>
-      </div>
-      <div>
-        <div class="metric-k">单笔最高</div>
-        <div class="metric-v num" id="stat-max">¥0.00</div>
-      </div>
+
+    <div class="main-amt-label" id="total-label">本月支出</div>
+    <div class="main-amt num" id="total-amount">¥0.00</div>
+    <div class="sub-metrics">
+      <div><div class="sub-k">记账笔数</div><div class="sub-v num" id="stat-count">0 笔</div></div>
+      <div><div class="sub-k">日均支出</div><div class="sub-v num" id="stat-avg">¥0.00</div></div>
+      <div><div class="sub-k">单笔最高</div><div class="sub-v num" id="stat-max">¥0.00</div></div>
     </div>
   </div>
 
-  <div class="card">
-    <div class="card-title">分类构成</div>
-    <div id="category-bars"></div>
-  </div>
-
-  <div class="card">
-    <div class="card-title">消费明细</div>
+  <!-- 明细视图 -->
+  <div class="container" id="view-detail">
     <div class="filters" id="filter-bar"></div>
     <div id="tx-list"></div>
   </div>
 
-  <div class="bottom-bar">
-    <label class="btn-import">
-      导入账单
-      <input type="file" id="csv-file" accept=".csv,.xlsx,.zip,text/csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,*/*" onchange="handleFileUpload(event)" />
-    </label>
-    <button class="btn-add" onclick="openAddSheet()">+ 记一笔</button>
+  <!-- 图表视图 -->
+  <div class="container" id="view-chart" style="display:none;">
+    <div class="card">
+      <div class="card-hdr"><span>支出占比</span></div>
+      <div class="donut-wrap" id="donut-wrap"></div>
+    </div>
+    <div class="card">
+      <div class="card-hdr"><span>每日支出趋势</span></div>
+      <div id="trend-chart"></div>
+    </div>
+    <div class="card">
+      <div class="card-hdr"><span>分类排行</span></div>
+      <div id="category-bars"></div>
+    </div>
+  </div>
+
+  <!-- 底部导航栏 -->
+  <div class="tabbar">
+    <button class="tab-item active" id="nav-detail" onclick="switchTab('detail')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+      <span>明细</span>
+    </button>
+    <div class="fab-wrap">
+      <button class="fab" onclick="openAddSheet()">+</button>
+    </div>
+    <button class="tab-item" id="nav-chart" onclick="switchTab('chart')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.21 15.89A10 10 0 1 1 8 2.83"/><path d="M22 12A10 10 0 0 0 12 2v10z"/></svg>
+      <span>图表</span>
+    </button>
   </div>
 
   <!-- 记一笔弹窗 -->
@@ -496,11 +525,11 @@
         <div class="sheet-title">记一笔</div>
         <button class="sheet-close" onclick="closeSheet('add-mask')">关闭</button>
       </div>
-      <input id="manual-amt" class="field num" type="number" inputmode="decimal" step="0.01" placeholder="金额（元）" style="font-size:20px;font-weight:700;" />
       <div class="cat-grid" id="add-cat-grid"></div>
+      <input id="manual-amt" class="field num" type="number" inputmode="decimal" step="0.01" placeholder="金额（元）" style="font-size:20px;font-weight:700;" />
       <input id="manual-note" class="field" type="text" placeholder="商户或备注（选填）" />
       <input id="manual-date" class="field" type="date" />
-      <button class="btn-full" onclick="saveManualEntry()">保存</button>
+      <button class="btn-save" onclick="saveManualEntry()">保存</button>
     </div>
   </div>
 
@@ -522,23 +551,14 @@
     const STORAGE_KEY = 'power_ledger_records_v1';
     const MERCHANT_RULES_KEY = 'power_ledger_merchant_rules_v1';
     const CATEGORIES = ['餐饮', '交通', '日用便利', '生活缴费', '休闲娱乐', '转账人情', '购物'];
-    const CAT_COLORS = {
-      '餐饮': '#f59e0b',
-      '交通': '#3b82f6',
-      '日用便利': '#10b981',
-      '生活缴费': '#06b6d4',
-      '休闲娱乐': '#ec4899',
-      '转账人情': '#6366f1',
-      '购物': '#8b5cf6'
-    };
-    const CAT_SHORT = {
-      '餐饮': '餐',
-      '交通': '行',
-      '日用便利': '日',
-      '生活缴费': '缴',
-      '休闲娱乐': '娱',
-      '转账人情': '转',
-      '购物': '购'
+    const CAT_META = {
+      '餐饮': { color: '#f59e0b', bg: '#fef3c7', svg: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2"/><path d="M7 2v20"/><path d="M21 15V2v0a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3Zm0 0v7"/></svg>' },
+      '交通': { color: '#3b82f6', bg: '#dbeafe', svg: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 17h2c.6 0 1-.4 1-1v-3c0-.9-.7-1.7-1.5-1.9C18.7 10.6 16 10 16 10s-1.3-1.4-2.2-2.3c-.5-.4-1.1-.7-1.8-.7H5c-.6 0-1.1.4-1.4.9l-1.4 2.9A3.7 3.7 0 0 0 2 12v4c0 .6.4 1 1 1h2"/><circle cx="7" cy="17" r="2"/><circle cx="17" cy="17" r="2"/></svg>' },
+      '日用便利': { color: '#10b981', bg: '#d1fae5', svg: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>' },
+      '生活缴费': { color: '#06b6d4', bg: '#cffafe', svg: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2 3 14h9l-1 8 10-12h-9l1-8z"/></svg>' },
+      '休闲娱乐': { color: '#ec4899', bg: '#fce7f3', svg: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="6" y1="12" x2="10" y2="12"/><line x1="8" y1="10" x2="8" y2="14"/><line x1="15" y1="13" x2="15.01" y2="13"/><line x1="18" y1="11" x2="18.01" y2="11"/><rect x="2" y="6" width="20" height="12" rx="4"/></svg>' },
+      '转账人情': { color: '#6366f1', bg: '#e0e7ff', svg: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>' },
+      '购物': { color: '#8b5cf6', bg: '#ede9fe', svg: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>' }
     };
 
     const ORDERED_KEYWORDS = [
@@ -551,6 +571,7 @@
     ];
     const PLATFORM_KEYWORDS = ['淘宝', '京东', '拼多多', '商城', '旗舰店', '服饰', '数码', '亚马逊', 'amazon', '乐天', '美团', '抖音'];
 
+    let activeTab = 'detail';
     let activeFilter = '全部';
     let periodMode = 'month';
     let cursorDate = new Date();
@@ -560,67 +581,55 @@
     let merchantRules = loadJson(MERCHANT_RULES_KEY, {});
 
     function loadJson(key, fallback) {
-      try {
-        const raw = localStorage.getItem(key);
-        return raw ? JSON.parse(raw) : fallback;
-      } catch (e) {
-        return fallback;
-      }
+      try { const raw = localStorage.getItem(key); return raw ? JSON.parse(raw) : fallback; }
+      catch (e) { return fallback; }
     }
-
-    function saveRecords() {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(records));
-    }
-
+    function saveRecords() { localStorage.setItem(STORAGE_KEY, JSON.stringify(records)); }
     function showToast(msg) {
       const el = document.getElementById('toast');
-      el.textContent = msg;
-      el.style.display = 'block';
+      el.textContent = msg; el.style.display = 'block';
       clearTimeout(showToast._t);
       showToast._t = setTimeout(() => { el.style.display = 'none'; }, 2400);
     }
 
     function classify(text, amount, merchant) {
       const mKey = (merchant || '').trim();
-      if (mKey && merchantRules[mKey] && CATEGORIES.includes(merchantRules[mKey])) {
-        return merchantRules[mKey];
-      }
+      if (mKey && merchantRules[mKey] && CATEGORIES.includes(merchantRules[mKey])) return merchantRules[mKey];
       const lower = (text || '').toLowerCase();
       for (const [cat, kws] of ORDERED_KEYWORDS) {
         if (kws.some(kw => lower.includes(kw))) return cat;
       }
-      if (PLATFORM_KEYWORDS.some(kw => lower.includes(kw))) {
-        return amount <= 35 ? '餐饮' : '购物';
-      }
+      if (PLATFORM_KEYWORDS.some(kw => lower.includes(kw))) return amount <= 35 ? '餐饮' : '购物';
       if (amount <= 35) return '餐饮';
       if (amount <= 150) return '日用便利';
       return '购物';
     }
 
+    function switchTab(tab) {
+      activeTab = tab;
+      document.getElementById('view-detail').style.display = tab === 'detail' ? 'block' : 'none';
+      document.getElementById('view-chart').style.display = tab === 'chart' ? 'block' : 'none';
+      document.getElementById('nav-detail').classList.toggle('active', tab === 'detail');
+      document.getElementById('nav-chart').classList.toggle('active', tab === 'chart');
+      render();
+    }
+
     function setPeriodMode(mode) {
       periodMode = mode;
-      ['day', 'month', 'year', 'all'].forEach(m => {
-        document.getElementById('tab-' + m).classList.toggle('active', m === mode);
-      });
+      ['day', 'month', 'year', 'all'].forEach(m => document.getElementById('tab-' + m).classList.toggle('active', m === mode));
       render();
     }
 
     function shiftPeriod(delta) {
-      if (periodMode === 'day') {
-        cursorDate = new Date(cursorDate.getFullYear(), cursorDate.getMonth(), cursorDate.getDate() + delta);
-      } else if (periodMode === 'month') {
-        cursorDate = new Date(cursorDate.getFullYear(), cursorDate.getMonth() + delta, 1);
-      } else if (periodMode === 'year') {
-        cursorDate = new Date(cursorDate.getFullYear() + delta, 0, 1);
-      }
+      if (periodMode === 'day') cursorDate = new Date(cursorDate.getFullYear(), cursorDate.getMonth(), cursorDate.getDate() + delta);
+      else if (periodMode === 'month') cursorDate = new Date(cursorDate.getFullYear(), cursorDate.getMonth() + delta, 1);
+      else if (periodMode === 'year') cursorDate = new Date(cursorDate.getFullYear() + delta, 0, 1);
       render();
     }
 
     function filterByPeriod(list) {
       if (periodMode === 'all') return list;
-      const y = cursorDate.getFullYear();
-      const m = cursorDate.getMonth();
-      const d = cursorDate.getDate();
+      const y = cursorDate.getFullYear(), m = cursorDate.getMonth(), d = cursorDate.getDate();
       return list.filter(r => {
         const dt = new Date(r.timestamp || Date.now());
         if (periodMode === 'year') return dt.getFullYear() === y;
@@ -633,61 +642,49 @@
       if (periodMode === 'day') return 1;
       if (periodMode === 'month') {
         const now = new Date();
-        if (cursorDate.getFullYear() === now.getFullYear() && cursorDate.getMonth() === now.getMonth()) {
-          return Math.max(1, now.getDate());
-        }
+        if (cursorDate.getFullYear() === now.getFullYear() && cursorDate.getMonth() === now.getMonth()) return Math.max(1, now.getDate());
         return new Date(cursorDate.getFullYear(), cursorDate.getMonth() + 1, 0).getDate();
       }
       if (periodMode === 'year') {
         const now = new Date();
-        if (cursorDate.getFullYear() === now.getFullYear()) {
-          const start = new Date(now.getFullYear(), 0, 1);
-          return Math.max(1, Math.ceil((now - start) / 86400000));
-        }
+        if (cursorDate.getFullYear() === now.getFullYear()) return Math.max(1, Math.ceil((now - new Date(now.getFullYear(), 0, 1)) / 86400000));
         return 365;
       }
-      const days = new Set(periodList.map(r => {
+      return Math.max(1, new Set(periodList.map(r => {
         const dt = new Date(r.timestamp || Date.now());
         return `${dt.getFullYear()}-${dt.getMonth()}-${dt.getDate()}`;
-      }));
-      return Math.max(1, days.size);
+      })).size);
     }
 
-    /* 记一笔弹窗 */
     function openAddSheet() {
       document.getElementById('manual-amt').value = '';
       document.getElementById('manual-note').value = '';
-      const d = new Date();
-      const pad = n => String(n).padStart(2, '0');
+      const d = new Date(), pad = n => String(n).padStart(2, '0');
       document.getElementById('manual-date').value = `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
-      renderAddCatGrid();
+      renderCatGrid('add-cat-grid', selectedAddCat, 'selectAddCat');
       document.getElementById('add-mask').classList.add('open');
-      setTimeout(() => document.getElementById('manual-amt').focus(), 100);
     }
 
-    function renderAddCatGrid() {
-      document.getElementById('add-cat-grid').innerHTML = CATEGORIES.map(c => `
-        <button class="cat-opt ${selectedAddCat === c ? 'selected' : ''}" onclick="selectAddCat('${c}')">${c}</button>
-      `).join('');
+    function renderCatGrid(elId, activeCat, fnName) {
+      document.getElementById(elId).innerHTML = CATEGORIES.map(c => {
+        const m = CAT_META[c];
+        return `<button class="cat-cell ${activeCat === c ? 'selected' : ''}" onclick="${fnName}('${c}')">
+          <div class="tx-ico" style="width:32px;height:32px;background:${m.bg};color:${m.color};">${m.svg}</div>
+          <span>${c}</span>
+        </button>`;
+      }).join('');
     }
 
-    function selectAddCat(cat) {
-      selectedAddCat = cat;
-      renderAddCatGrid();
-    }
+    function selectAddCat(cat) { selectedAddCat = cat; renderCatGrid('add-cat-grid', selectedAddCat, 'selectAddCat'); }
 
     function saveManualEntry() {
       const amt = parseFloat(document.getElementById('manual-amt').value);
-      if (!amt || amt <= 0) {
-        showToast('请输入有效金额');
-        return;
-      }
+      if (!amt || amt <= 0) { showToast('请输入有效金额'); return; }
       const note = document.getElementById('manual-note').value.trim();
       const dateStr = document.getElementById('manual-date').value;
       let ts = Date.now();
       if (dateStr) {
-        const now = new Date();
-        const p = dateStr.split('-').map(Number);
+        const now = new Date(), p = dateStr.split('-').map(Number);
         if (p.length === 3) ts = new Date(p[0], p[1] - 1, p[2], now.getHours(), now.getMinutes(), now.getSeconds()).getTime();
       }
       records.unshift({
@@ -706,15 +703,12 @@
       showToast(`已记录 -${amt.toFixed(2)}`);
     }
 
-    /* 编辑/删除弹窗 */
     function openEditSheet(id) {
       const target = records.find(r => r.id === id);
       if (!target) return;
       editingId = id;
       document.getElementById('edit-title').textContent = target.merchant;
-      document.getElementById('edit-cat-grid').innerHTML = CATEGORIES.map(c => `
-        <button class="cat-opt ${target.category === c ? 'selected' : ''}" onclick="applyEditCat('${c}')">${c}</button>
-      `).join('');
+      renderCatGrid('edit-cat-grid', target.category, 'applyEditCat');
       document.getElementById('edit-mask').classList.add('open');
     }
 
@@ -755,21 +749,14 @@
 
     /* CSV / XLSX / ZIP 解析 */
     function parseCsvLine(line) {
-      const res = [];
-      let cur = '', inQuotes = false;
+      const res = []; let cur = '', inQuotes = false;
       for (let i = 0; i < line.length; i++) {
         const ch = line[i];
-        if (ch === '"') {
-          if (inQuotes && line[i + 1] === '"') { cur += '"'; i++; }
-          else inQuotes = !inQuotes;
-        } else if (ch === ',' && !inQuotes) {
-          res.push(cur.trim()); cur = '';
-        } else {
-          cur += ch;
-        }
+        if (ch === '"') { if (inQuotes && line[i + 1] === '"') { cur += '"'; i++; } else inQuotes = !inQuotes; }
+        else if (ch === ',' && !inQuotes) { res.push(cur.trim()); cur = ''; }
+        else cur += ch;
       }
-      res.push(cur.trim());
-      return res;
+      res.push(cur.trim()); return res;
     }
 
     function decodeCsvBuffer(buffer) {
@@ -779,97 +766,61 @@
       }
       const utf8 = new TextDecoder('utf-8').decode(buffer);
       if (utf8.includes('交易时间') && utf8.includes('交易对方')) return utf8;
-      try {
-        const gbk = new TextDecoder('gb18030').decode(buffer);
-        if (gbk.includes('交易时间') && gbk.includes('交易对方')) return gbk;
-      } catch (e) {}
+      try { const gbk = new TextDecoder('gb18030').decode(buffer); if (gbk.includes('交易时间') && gbk.includes('交易对方')) return gbk; } catch (e) {}
       return utf8;
     }
 
     async function unzipEntries(buffer) {
-      const view = new DataView(buffer);
-      const bytes = new Uint8Array(buffer);
+      const view = new DataView(buffer), bytes = new Uint8Array(buffer);
       let eocd = -1;
       for (let i = bytes.length - 22; i >= Math.max(0, bytes.length - 65557); i--) {
         if (view.getUint32(i, true) === 0x06054b50) { eocd = i; break; }
       }
       if (eocd === -1) throw new Error('Invalid XLSX/ZIP');
       let ptr = view.getUint32(eocd + 16, true);
-      const total = view.getUint16(eocd + 10, true);
-      const entries = {};
-      const dec = new TextDecoder('utf-8');
-
+      const total = view.getUint16(eocd + 10, true), entries = {}, dec = new TextDecoder('utf-8');
       for (let i = 0; i < total; i++) {
         if (view.getUint32(ptr, true) !== 0x02014b50) break;
-        const method = view.getUint16(ptr + 10, true);
-        const compSize = view.getUint32(ptr + 20, true);
-        const nLen = view.getUint16(ptr + 28, true);
-        const eLen = view.getUint16(ptr + 30, true);
-        const cLen = view.getUint16(ptr + 32, true);
-        const lOff = view.getUint32(ptr + 42, true);
+        const method = view.getUint16(ptr + 10, true), compSize = view.getUint32(ptr + 20, true);
+        const nLen = view.getUint16(ptr + 28, true), eLen = view.getUint16(ptr + 30, true), cLen = view.getUint16(ptr + 32, true), lOff = view.getUint32(ptr + 42, true);
         const name = dec.decode(bytes.subarray(ptr + 46, ptr + 46 + nLen));
         ptr += 46 + nLen + eLen + cLen;
-
-        const lnLen = view.getUint16(lOff + 26, true);
-        const leLen = view.getUint16(lOff + 28, true);
-        const start = lOff + 30 + lnLen + leLen;
+        const lnLen = view.getUint16(lOff + 26, true), leLen = view.getUint16(lOff + 28, true), start = lOff + 30 + lnLen + leLen;
         const slice = bytes.subarray(start, start + compSize);
-        if (method === 0) {
-          entries[name] = slice.buffer.slice(slice.byteOffset, slice.byteOffset + slice.byteLength);
-        } else if (method === 8) {
-          entries[name] = await new Response(new Blob([slice]).stream().pipeThrough(new DecompressionStream('deflate-raw'))).arrayBuffer();
-        }
+        if (method === 0) entries[name] = slice.buffer.slice(slice.byteOffset, slice.byteOffset + slice.byteLength);
+        else if (method === 8) entries[name] = await new Response(new Blob([slice]).stream().pipeThrough(new DecompressionStream('deflate-raw'))).arrayBuffer();
       }
       return entries;
     }
 
     function colRefToIndex(ref) {
-      const m = (ref || '').match(/^([A-Z]+)/i);
-      if (!m) return -1;
-      let idx = 0;
-      const letters = m[1].toUpperCase();
+      const m = (ref || '').match(/^([A-Z]+)/i); if (!m) return -1;
+      let idx = 0; const letters = m[1].toUpperCase();
       for (let i = 0; i < letters.length; i++) idx = idx * 26 + (letters.charCodeAt(i) - 64);
       return idx - 1;
     }
 
     function parseXlsxEntries(entries) {
-      const dec = new TextDecoder('utf-8');
-      const dom = new DOMParser();
-      const shared = [];
+      const dec = new TextDecoder('utf-8'), dom = new DOMParser(), shared = [];
       if (entries['xl/sharedStrings.xml']) {
-        const sDoc = dom.parseFromString(dec.decode(entries['xl/sharedStrings.xml']), 'text/xml');
-        const sis = sDoc.getElementsByTagName('si');
+        const sis = dom.parseFromString(dec.decode(entries['xl/sharedStrings.xml']), 'text/xml').getElementsByTagName('si');
         for (let i = 0; i < sis.length; i++) {
-          const ts = sis[i].getElementsByTagName('t');
-          let s = '';
+          const ts = sis[i].getElementsByTagName('t'); let s = '';
           for (let j = 0; j < ts.length; j++) s += ts[j].textContent || '';
           shared.push(s);
         }
       }
       const sheetKey = Object.keys(entries).find(k => /^xl\/worksheets\/sheet\d+\.xml$/i.test(k));
       if (!sheetKey) return [];
-      const doc = dom.parseFromString(dec.decode(entries[sheetKey]), 'text/xml');
-      const rowNodes = doc.getElementsByTagName('row');
-      const rows = [];
+      const rowNodes = dom.parseFromString(dec.decode(entries[sheetKey]), 'text/xml').getElementsByTagName('row'), rows = [];
       for (let r = 0; r < rowNodes.length; r++) {
-        const cells = rowNodes[r].getElementsByTagName('c');
-        const rowArr = [];
+        const cells = rowNodes[r].getElementsByTagName('c'), rowArr = [];
         for (let c = 0; c < cells.length; c++) {
-          const cell = cells[c];
-          const colIdx = colRefToIndex(cell.getAttribute('r'));
-          const target = colIdx >= 0 ? colIdx : rowArr.length;
-          const t = cell.getAttribute('t');
+          const cell = cells[c], colIdx = colRefToIndex(cell.getAttribute('r')), target = colIdx >= 0 ? colIdx : rowArr.length, t = cell.getAttribute('t');
           let val = '';
-          if (t === 's') {
-            const v = cell.getElementsByTagName('v')[0];
-            val = v ? (shared[parseInt(v.textContent, 10)] || '') : '';
-          } else if (t === 'inlineStr') {
-            const ts = cell.getElementsByTagName('t');
-            for (let k = 0; k < ts.length; k++) val += ts[k].textContent || '';
-          } else {
-            const v = cell.getElementsByTagName('v')[0];
-            val = v ? (v.textContent || '') : '';
-          }
+          if (t === 's') { const v = cell.getElementsByTagName('v')[0]; val = v ? (shared[parseInt(v.textContent, 10)] || '') : ''; }
+          else if (t === 'inlineStr') { const ts = cell.getElementsByTagName('t'); for (let k = 0; k < ts.length; k++) val += ts[k].textContent || ''; }
+          else { const v = cell.getElementsByTagName('v')[0]; val = v ? (v.textContent || '') : ''; }
           rowArr[target] = val.trim();
         }
         rows.push(rowArr.map(v => v || ''));
@@ -881,9 +832,7 @@
       const bytes = new Uint8Array(buffer);
       if (bytes.length >= 2 && bytes[0] === 0x50 && bytes[1] === 0x4B) {
         const entries = await unzipEntries(buffer);
-        if (entries['xl/workbook.xml'] || Object.keys(entries).some(k => k.startsWith('xl/worksheets/'))) {
-          return parseXlsxEntries(entries);
-        }
+        if (entries['xl/workbook.xml'] || Object.keys(entries).some(k => k.startsWith('xl/worksheets/'))) return parseXlsxEntries(entries);
         const csvKey = Object.keys(entries).find(k => k.toLowerCase().endsWith('.csv'));
         if (csvKey) return decodeCsvBuffer(entries[csvKey]).split(/\r?\n/).filter(l => l.trim()).map(parseCsvLine);
         const xlsxKey = Object.keys(entries).find(k => k.toLowerCase().endsWith('.xlsx'));
@@ -906,11 +855,7 @@
               headerIdx = i; headers = cols; break;
             }
           }
-          if (headerIdx === -1) {
-            showToast('未识别到微信/支付宝账单表头');
-            event.target.value = '';
-            return;
-          }
+          if (headerIdx === -1) { showToast('未识别到微信/支付宝账单表头'); event.target.value = ''; return; }
 
           const idxTime = headers.findIndex(h => h.includes('交易时间'));
           const idxTxType = headers.findIndex(h => h.includes('交易类型'));
@@ -926,17 +871,12 @@
 
           for (let i = headerIdx + 1; i < rows.length; i++) {
             const cols = rows[i];
-            if (!cols || cols.length < 4) continue;
-            if (!(cols[idxType] || '').includes('支出')) continue;
-
+            if (!cols || cols.length < 4 || !(cols[idxType] || '').includes('支出')) continue;
             let amount = parseFloat((cols[idxAmt] || '').replace(/[¥￥,\s元]/g, ''));
             if (!amount || amount <= 0) continue;
 
             const status = idxStatus >= 0 ? (cols[idxStatus] || '').trim() : '';
-            if (status.includes('已全额退款') || status === '已退款' || status.includes('交易关闭')) {
-              skippedRefund++;
-              continue;
-            }
+            if (status.includes('已全额退款') || status === '已退款' || status.includes('交易关闭')) { skippedRefund++; continue; }
             const partial = status.match(/已退款\s*[（(]\s*[¥￥]?\s*([0-9]+(?:\.[0-9]{1,2})?)\s*[)）]/);
             if (partial) {
               const ref = parseFloat(partial[1]);
@@ -950,7 +890,6 @@
             const peer = (cols[idxPeer] || '').trim();
             const goods = idxGoods >= 0 ? (cols[idxGoods] || '').trim() : '';
             const dedupOrder = orderNo || `${timeStr}_${peer}_${amount.toFixed(2)}`;
-
             if (existingOrders.has(dedupOrder)) continue;
             existingOrders.add(dedupOrder);
 
@@ -959,13 +898,9 @@
             const category = classify(`${txType} ${peer} ${goods}`, amount, merchant);
 
             records.push({
-              id: 'csv_' + dedupOrder,
-              orderNo: dedupOrder,
-              amount,
-              merchant: merchant.slice(0, 24),
-              category,
-              channel: partial ? '账单(已扣退款)' : '账单导入',
-              timestamp: ts
+              id: 'csv_' + dedupOrder, orderNo: dedupOrder, amount,
+              merchant: merchant.slice(0, 24), category,
+              channel: partial ? '账单(已扣退款)' : '账单导入', timestamp: ts
             });
             imported++;
           }
@@ -974,35 +909,102 @@
           saveRecords();
           if (imported > 0 && records.length > 0) cursorDate = new Date(records[0].timestamp);
           render();
-          showToast(imported > 0
-            ? `导入 ${imported} 笔` + (skippedRefund > 0 ? `，已过滤 ${skippedRefund} 笔退款` : '')
-            : (skippedRefund > 0 ? `已过滤 ${skippedRefund} 笔退款，无新支出` : '没有新的支出记录'));
-        } catch (err) {
-          showToast('解析失败');
-        }
+          showToast(imported > 0 ? `导入 ${imported} 笔` + (skippedRefund > 0 ? `，已过滤 ${skippedRefund} 笔退款` : '') : (skippedRefund > 0 ? `已过滤 ${skippedRefund} 笔退款，无新支出` : '没有新的支出记录'));
+        } catch (err) { showToast('解析失败'); }
         event.target.value = '';
       };
       reader.readAsArrayBuffer(file);
     }
 
     function formatTimeShort(ts) {
-      const d = new Date(ts || Date.now());
-      const pad = n => String(n).padStart(2, '0');
+      const d = new Date(ts || Date.now()), pad = n => String(n).padStart(2, '0');
       return `${pad(d.getHours())}:${pad(d.getMinutes())}`;
     }
 
     function formatDayHeader(ts) {
-      const d = new Date(ts || Date.now());
-      const weeks = ['周日', '周一', '周二', '周三', '周四', '周五', '周六'];
-      const pad = n => String(n).padStart(2, '0');
-      return {
-        key: `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`,
-        label: `${d.getMonth() + 1}月${d.getDate()}日 ${weeks[d.getDay()]}`
-      };
+      const d = new Date(ts || Date.now()), weeks = ['周日', '周一', '周二', '周三', '周四', '周五', '周六'], pad = n => String(n).padStart(2, '0');
+      return { key: `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`, label: `${d.getMonth() + 1}月${d.getDate()}日 ${weeks[d.getDay()]}` };
     }
 
     function escapeHtml(str) {
       return String(str || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    }
+
+    function renderCharts(periodRecords, catTotals, total) {
+      const sorted = [...CATEGORIES].filter(c => catTotals[c] > 0).sort((a, b) => catTotals[b] - catTotals[a]);
+      const donutEl = document.getElementById('donut-wrap');
+      if (!sorted.length || total <= 0) {
+        donutEl.innerHTML = '<div class="empty" style="padding:18px;width:100%;">暂无支出数据</div>';
+      } else {
+        const r = 42, circ = 2 * Math.PI * r;
+        let offset = 0;
+        const segs = sorted.map(c => {
+          const frac = catTotals[c] / total;
+          const len = frac * circ;
+          const seg = `<circle cx="55" cy="55" r="${r}" fill="transparent" stroke="${CAT_META[c].color}" stroke-width="14" stroke-dasharray="${len} ${circ}" stroke-dashoffset="${-offset}" />`;
+          offset += len;
+          return seg;
+        }).join('');
+        const topCat = sorted[0];
+        const topPct = Math.round((catTotals[topCat] / total) * 100);
+        donutEl.innerHTML = `
+          <svg width="110" height="110" viewBox="0 0 110 110" style="transform:rotate(-90deg);flex-shrink:0;">
+            <circle cx="55" cy="55" r="${r}" fill="transparent" stroke="#f1f5f9" stroke-width="14"/>
+            ${segs}
+            <g transform="rotate(90 55 55)">
+              <text x="55" y="51" text-anchor="middle" font-size="11" fill="#6b7280">${topCat}</text>
+              <text x="55" y="66" text-anchor="middle" font-size="13" font-weight="700" fill="#111827">${topPct}%</text>
+            </g>
+          </svg>
+          <div class="legend">
+            ${sorted.slice(0, 5).map(c => `
+              <div class="leg-row">
+                <span class="leg-l"><span class="leg-dot" style="background:${CAT_META[c].color};"></span>${c}</span>
+                <span class="num" style="font-weight:600;">${Math.round((catTotals[c] / total) * 100)}%</span>
+              </div>
+            `).join('')}
+          </div>
+        `;
+      }
+
+      // 每日柱状图
+      const dayMap = {};
+      periodRecords.forEach(r => {
+        const d = new Date(r.timestamp || Date.now());
+        const key = `${d.getMonth() + 1}/${d.getDate()}`;
+        dayMap[key] = (dayMap[key] || 0) + Number(r.amount || 0);
+      });
+      const dayKeys = Object.keys(dayMap).reverse().slice(-14);
+      const trendEl = document.getElementById('trend-chart');
+      if (!dayKeys.length) {
+        trendEl.innerHTML = '<div class="empty" style="padding:14px;">暂无趋势数据</div>';
+      } else {
+        const maxDay = Math.max(...dayKeys.map(k => dayMap[k]), 1);
+        const w = 320, h = 100, barW = Math.max(8, Math.min(20, Math.floor((w - 20) / dayKeys.length) - 6));
+        const step = (w - 20) / dayKeys.length;
+        const bars = dayKeys.map((k, idx) => {
+          const val = dayMap[k];
+          const bh = Math.max(3, Math.round((val / maxDay) * 68));
+          const x = 10 + idx * step + (step - barW) / 2;
+          const y = 76 - bh;
+          return `
+            <rect x="${x}" y="${y}" width="${barW}" height="${bh}" rx="3" fill="#10b981" opacity="0.85" />
+            <text x="${x + barW / 2}" y="92" text-anchor="middle" font-size="9" fill="#9ca3af">${k}</text>
+          `;
+        }).join('');
+        trendEl.innerHTML = `<svg viewBox="0 0 ${w} ${h}" width="100%" height="100">${bars}</svg>`;
+      }
+
+      document.getElementById('category-bars').innerHTML = [...CATEGORIES].sort((a, b) => catTotals[b] - catTotals[a]).map(c => {
+        const val = catTotals[c], pct = total > 0 ? Math.round((val / total) * 100) : 0;
+        return `<div class="rank-row">
+          <div class="rank-top">
+            <span style="font-weight:500;">${c}</span>
+            <span class="num" style="font-weight:600;">¥${val.toFixed(2)} <span style="color:#8c93a0;font-weight:400;">(${pct}%)</span></span>
+          </div>
+          <div class="bar-bg"><div class="bar-fill" style="width:${pct}%;background:${CAT_META[c].color};"></div></div>
+        </div>`;
+      }).join('');
     }
 
     function render() {
@@ -1012,20 +1014,13 @@
       const pad = n => String(n).padStart(2, '0');
 
       if (periodMode === 'all') {
-        navEl.style.display = 'none';
+        navEl.style.visibility = 'hidden';
         titleEl.textContent = '累计支出';
       } else {
-        navEl.style.display = 'flex';
-        if (periodMode === 'day') {
-          labelEl.textContent = `${cursorDate.getFullYear()}-${pad(cursorDate.getMonth() + 1)}-${pad(cursorDate.getDate())}`;
-          titleEl.textContent = '当日支出';
-        } else if (periodMode === 'month') {
-          labelEl.textContent = `${cursorDate.getFullYear()}年${cursorDate.getMonth() + 1}月`;
-          titleEl.textContent = '本月支出';
-        } else {
-          labelEl.textContent = `${cursorDate.getFullYear()}年`;
-          titleEl.textContent = '本年支出';
-        }
+        navEl.style.visibility = 'visible';
+        if (periodMode === 'day') { labelEl.textContent = `${cursorDate.getFullYear()}-${pad(cursorDate.getMonth() + 1)}-${pad(cursorDate.getDate())}`; titleEl.textContent = '当日支出'; }
+        else if (periodMode === 'month') { labelEl.textContent = `${cursorDate.getFullYear()}年${cursorDate.getMonth() + 1}月`; titleEl.textContent = '本月支出'; }
+        else { labelEl.textContent = `${cursorDate.getFullYear()}年`; titleEl.textContent = '本年支出'; }
       }
 
       const periodRecords = filterByPeriod(records);
@@ -1047,74 +1042,54 @@
       document.getElementById('stat-avg').textContent = '¥' + (Math.max(0, total) / days).toFixed(2);
       document.getElementById('stat-max').textContent = '¥' + maxAmt.toFixed(2);
 
-      const sortedCats = [...CATEGORIES].sort((a, b) => catTotals[b] - catTotals[a]);
-      document.getElementById('category-bars').innerHTML = sortedCats.map(cat => {
-        const val = catTotals[cat];
-        const pct = total > 0 ? Math.round((val / total) * 100) : 0;
-        return `
-          <div class="cat-item">
-            <div class="cat-row">
-              <span class="cat-name"><span class="cat-dot" style="background:${CAT_COLORS[cat]};"></span>${cat}</span>
-              <span class="cat-val num">¥${val.toFixed(2)}<span class="cat-pct">${pct}%</span></span>
-            </div>
-            <div class="bar-bg"><div class="bar-fill" style="width:${pct}%;background:${CAT_COLORS[cat]};"></div></div>
-          </div>
-        `;
-      }).join('');
+      if (activeTab === 'chart') {
+        renderCharts(periodRecords, catTotals, total);
+        return;
+      }
 
-      const filters = ['全部', ...CATEGORIES];
-      document.getElementById('filter-bar').innerHTML = filters.map(f => `
+      document.getElementById('filter-bar').innerHTML = ['全部', ...CATEGORIES].map(f => `
         <button class="chip ${activeFilter === f ? 'active' : ''}" onclick="setFilter('${f}')">${f}</button>
       `).join('');
 
-      const filtered = activeFilter === '全部'
-        ? periodRecords
-        : periodRecords.filter(r => r.category === activeFilter);
-
+      const filtered = activeFilter === '全部' ? periodRecords : periodRecords.filter(r => r.category === activeFilter);
       const listEl = document.getElementById('tx-list');
       if (!filtered.length) {
-        listEl.innerHTML = '<div class="empty">暂无消费记录，可点击下方导入账单或记一笔</div>';
+        listEl.innerHTML = '<div class="empty">暂无支出记录，点击右上角「导入账单」或下方「+」记一笔</div>';
         return;
       }
 
       const groups = [], map = {};
       filtered.forEach(r => {
         const info = formatDayHeader(r.timestamp);
-        if (!map[info.key]) {
-          map[info.key] = { label: info.label, total: 0, items: [] };
-          groups.push(map[info.key]);
-        }
+        if (!map[info.key]) { map[info.key] = { label: info.label, total: 0, items: [] }; groups.push(map[info.key]); }
         map[info.key].items.push(r);
         map[info.key].total += Number(r.amount || 0);
       });
 
       listEl.innerHTML = groups.map(g => `
-        <div class="day-hdr">
-          <span>${g.label}</span>
-          <span class="num">支出 ¥${g.total.toFixed(2)}</span>
-        </div>
-        ${g.items.map(r => {
-          const c = CATEGORIES.includes(r.category) ? r.category : '购物';
-          return `
-          <div class="tx-row" onclick="openEditSheet('${escapeHtml(r.id)}')">
-            <div class="tx-badge" style="background:${CAT_COLORS[c]};">${CAT_SHORT[c]}</div>
-            <div class="tx-mid">
-              <div class="tx-title">${escapeHtml(r.merchant)}</div>
-              <div class="tx-meta">${escapeHtml(r.channel || '记账')} · ${formatTimeShort(r.timestamp)}</div>
-            </div>
-            <div class="tx-right">
+        <div class="day-card">
+          <div class="day-hdr">
+            <span>${g.label}</span>
+            <span class="num">支出 ${g.total.toFixed(2)}</span>
+          </div>
+          ${g.items.map(r => {
+            const c = CATEGORIES.includes(r.category) ? r.category : '购物';
+            const m = CAT_META[c];
+            return `
+            <div class="tx-row" onclick="openEditSheet('${escapeHtml(r.id)}')">
+              <div class="tx-ico" style="background:${m.bg};color:${m.color};">${m.svg}</div>
+              <div class="tx-mid">
+                <div class="tx-title">${escapeHtml(r.merchant)}</div>
+                <div class="tx-sub">${c} · ${formatTimeShort(r.timestamp)}</div>
+              </div>
               <div class="tx-amt num">-${Number(r.amount).toFixed(2)}</div>
-              <div class="tx-cat">${c}</div>
-            </div>
-          </div>`;
-        }).join('')}
+            </div>`;
+          }).join('')}
+        </div>
       `).join('');
     }
 
-    function setFilter(f) {
-      activeFilter = f;
-      render();
-    }
+    function setFilter(f) { activeFilter = f; render(); }
 
     render();
   </script>
