@@ -2,12 +2,15 @@ package com.powerledger.app
 
 import android.annotation.SuppressLint
 import android.content.Intent
+import android.graphics.Color
 import android.net.Uri
 import android.os.Bundle
+import android.view.View
 import android.webkit.ValueCallback
 import android.webkit.WebChromeClient
 import android.webkit.WebView
 import android.webkit.WebViewClient
+import android.widget.LinearLayout
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
@@ -30,12 +33,27 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
+        val rootLayout = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+        }
+        val statusBarSpacer = View(this).apply {
+            setBackgroundColor(Color.parseColor("#10B981"))
+        }
+        val navBarSpacer = View(this).apply {
+            setBackgroundColor(Color.WHITE)
+        }
         webView = WebView(this)
-        setContentView(webView)
 
-        ViewCompat.setOnApplyWindowInsetsListener(webView) { v, insets ->
+        rootLayout.addView(statusBarSpacer, LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, 0))
+        rootLayout.addView(webView, LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, 0, 1f))
+        rootLayout.addView(navBarSpacer, LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, 0))
+        setContentView(rootLayout)
+
+        ViewCompat.setOnApplyWindowInsetsListener(rootLayout) { _, insets ->
             val bars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
-            v.setPadding(bars.left, bars.top, bars.right, bars.bottom)
+            statusBarSpacer.layoutParams = statusBarSpacer.layoutParams.apply { height = bars.top }
+            navBarSpacer.layoutParams = navBarSpacer.layoutParams.apply { height = bars.bottom }
+            rootLayout.setPadding(bars.left, 0, bars.right, 0)
             insets
         }
 
