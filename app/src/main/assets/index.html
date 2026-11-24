@@ -548,14 +548,17 @@
           }
 
           const idxTime = headers.findIndex(h => h.includes('交易时间'));
+          const idxTxType = headers.findIndex(h => h.includes('交易类型'));
           const idxPeer = headers.findIndex(h => h.includes('交易对方'));
           const idxGoods = headers.findIndex(h => h.includes('商品'));
           const idxType = headers.findIndex(h => h.includes('收/支'));
           const idxAmt = headers.findIndex(h => h.includes('金额'));
+          const idxStatus = headers.findIndex(h => h.includes('当前状态') || h.includes('交易状态'));
           const idxOrder = headers.findIndex(h => h.includes('交易单号') || h.includes('交易订单号'));
 
           const existingOrders = new Set(records.map(r => r.orderNo).filter(Boolean));
           let imported = 0;
+          let skippedRefund = 0;
 
           for (let i = headerIdx + 1; i < lines.length; i++) {
             const cols = parseCsvLine(lines[i]);
@@ -564,11 +567,29 @@
             if (!ioType.includes('支出')) continue;
 
             const rawAmt = (cols[idxAmt] || '').replace(/[¥￥,\s元]/g, '');
-            const amount = parseFloat(rawAmt);
+            let amount = parseFloat(rawAmt);
             if (!amount || amount <= 0) continue;
+
+            const status = idxStatus >= 0 ? (cols[idxStatus] || '').trim() : '';
+            if (status.includes('已全额退款') || status === '已退款' || status.includes('交易关闭')) {
+              skippedRefund++;
+              continue;
+            }
+            const partialMatch = status.match(/已退款\s*[（(]\s*[¥￥]?\s*([0-9]+(?:\.[0-9]{1,2})?)\s*[)）]/);
+            if (partialMatch) {
+              const refunded = parseFloat(partialMatch[1]);
+              if (refunded > 0) {
+                amount = Math.round((amount - refunded) * 100) / 100;
+              }
+              if (amount <= 0) {
+                skippedRefund++;
+                continue;
+              }
+            }
 
             const orderNo = idxOrder >= 0 ? (cols[idxOrder] || '').trim() : '';
             const timeStr = (cols[idxTime] || '').trim();
+            const txType = idxTxType >= 0 ? (cols[idxTxType] || '').trim() : '';
             const peer = (cols[idxPeer] || '').trim();
             const goods = idxGoods >= 0 ? (cols[idxGoods] || '').trim() : '';
             const dedupOrder = orderNo || `${timeStr}_${peer}_${amount.toFixed(2)}`;
@@ -578,7 +599,7 @@
 
             const merchant = peer || (goods && goods !== '/' ? goods : '账单导入');
             const ts = Date.parse(timeStr.replace(/-/g, '/')) || Date.now();
-            const category = classify(`${peer} ${goods}`, amount);
+            const category = classify(`${txType} ${peer} ${goods}`, amount);
 
             records.push({
               id: 'csv_' + dedupOrder,
@@ -586,7 +607,7 @@
               amount,
               merchant: merchant.slice(0, 24),
               category,
-              channel: '账单CSV',
+              channel: partialMatch ? '账单CSV(部分退款后)' : '账单CSV',
               timestamp: ts,
               source: 'csv'
             });
@@ -596,7 +617,11 @@
           records.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
           saveRecords();
           render();
-          showToast(imported > 0 ? `成功导入 ${imported} 笔支出` : '没有新的支出记录可导入');
+          if (imported > 0) {
+            showToast(`成功导入 ${imported} 笔支出` + (skippedRefund > 0 ? `（已自动过滤 ${skippedRefund} 笔全额退款）` : ''));
+          } else {
+            showToast(skippedRefund > 0 ? `已过滤 ${skippedRefund} 笔退款，无新支出` : '没有新的支出记录可导入');
+          }
         } catch (err) {
           showToast('CSV 解析失败');
         }
