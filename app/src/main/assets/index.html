@@ -1,0 +1,720 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>极省记账</title>
+  <style>
+    :root {
+      --bg: #f5f7fa;
+      --card: #ffffff;
+      --text: #111827;
+      --muted: #6b7280;
+      --border: #e5e7eb;
+      --primary: #10b981;
+      --primary-dark: #059669;
+      --danger: #ef4444;
+      --food: #f59e0b;
+      --transport: #3b82f6;
+      --daily: #10b981;
+      --shopping: #8b5cf6;
+    }
+    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+    body {
+      margin: 0;
+      padding: 14px 14px 40px;
+      font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "HarmonyOS Sans", "Segoe UI", Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      font-size: 14px;
+      line-height: 1.45;
+    }
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+    .title {
+      font-size: 20px;
+      font-weight: 700;
+      letter-spacing: -0.3px;
+    }
+    .subtitle {
+      font-size: 11px;
+      color: var(--muted);
+    }
+    .card {
+      background: var(--card);
+      border-radius: 16px;
+      padding: 14px;
+      margin-bottom: 12px;
+      box-shadow: 0 2px 8px rgba(17, 24, 39, 0.04);
+      border: 1px solid rgba(229, 231, 235, 0.7);
+    }
+    .quick-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 8px;
+    }
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      padding: 9px 12px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      background: #f9fafb;
+      color: var(--text);
+      font-size: 12.5px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    .btn:active { opacity: 0.75; }
+    .btn-primary {
+      background: var(--primary);
+      border-color: var(--primary);
+      color: #fff;
+    }
+    .btn-danger {
+      color: var(--danger);
+      background: #fef2f2;
+      border-color: #fecaca;
+    }
+    .dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: #9ca3af;
+      display: inline-block;
+    }
+    .dot.on { background: #10b981; }
+    .dot.off { background: #ef4444; }
+    .summary-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+      margin-bottom: 14px;
+    }
+    .total-label { font-size: 12px; color: var(--muted); }
+    .total-val { font-size: 28px; font-weight: 800; letter-spacing: -0.5px; }
+    .count-badge {
+      background: #ecfdf5;
+      color: var(--primary-dark);
+      padding: 4px 10px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 600;
+    }
+    .cat-row { margin-bottom: 10px; }
+    .cat-row:last-child { margin-bottom: 0; }
+    .cat-meta {
+      display: flex;
+      justify-content: space-between;
+      font-size: 12.5px;
+      margin-bottom: 4px;
+    }
+    .bar-bg {
+      height: 7px;
+      background: #f3f4f6;
+      border-radius: 999px;
+      overflow: hidden;
+    }
+    .bar-fill {
+      height: 100%;
+      border-radius: 999px;
+      transition: width 0.25s ease;
+    }
+    .section-title {
+      font-size: 13.5px;
+      font-weight: 700;
+      margin-bottom: 10px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    textarea {
+      width: 100%;
+      min-height: 62px;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 9px 10px;
+      font-size: 13px;
+      font-family: inherit;
+      resize: vertical;
+      background: #f9fafb;
+      outline: none;
+    }
+    textarea:focus { border-color: var(--primary); background: #fff; }
+    .row-actions {
+      display: flex;
+      gap: 8px;
+      margin-top: 8px;
+      align-items: center;
+    }
+    .file-label {
+      flex: 1;
+      text-align: center;
+      padding: 9px 12px;
+      border-radius: 10px;
+      border: 1px dashed #9ca3af;
+      background: #f9fafb;
+      font-size: 12.5px;
+      font-weight: 600;
+      color: #374151;
+      cursor: pointer;
+    }
+    .file-label input { display: none; }
+    .filter-bar {
+      display: flex;
+      gap: 6px;
+      overflow-x: auto;
+      padding-bottom: 4px;
+      margin-bottom: 10px;
+    }
+    .pill {
+      padding: 5px 12px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      background: #fff;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--muted);
+      white-space: nowrap;
+      cursor: pointer;
+    }
+    .pill.active {
+      background: var(--text);
+      color: #fff;
+      border-color: var(--text);
+    }
+    .tx-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px 0;
+      border-bottom: 1px solid #f3f4f6;
+      gap: 8px;
+    }
+    .tx-item:last-child { border-bottom: none; padding-bottom: 0; }
+    .tx-left { flex: 1; min-width: 0; }
+    .tx-merchant {
+      font-weight: 600;
+      font-size: 13.5px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .tx-sub {
+      font-size: 11.5px;
+      color: var(--muted);
+      margin-top: 2px;
+    }
+    .tx-right {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-shrink: 0;
+    }
+    .tx-amt {
+      font-weight: 700;
+      font-size: 14px;
+      color: var(--text);
+      min-width: 58px;
+      text-align: right;
+    }
+    select.cat-select {
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 4px 6px;
+      font-size: 11.5px;
+      background: #f9fafb;
+      color: var(--text);
+    }
+    .del-btn {
+      border: none;
+      background: #fee2e2;
+      color: #dc2626;
+      border-radius: 7px;
+      padding: 4px 8px;
+      font-size: 11.5px;
+      cursor: pointer;
+    }
+    .empty {
+      text-align: center;
+      color: var(--muted);
+      padding: 22px 0;
+      font-size: 13px;
+    }
+    .toast {
+      position: fixed;
+      bottom: 18px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(17, 24, 39, 0.92);
+      color: #fff;
+      padding: 8px 14px;
+      border-radius: 999px;
+      font-size: 12.5px;
+      z-index: 999;
+      display: none;
+      white-space: nowrap;
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <div>
+      <div class="title">极省记账</div>
+      <div class="subtitle">纯事件驱动 · 零后台轮询</div>
+    </div>
+  </div>
+
+  <!-- 快捷操作 -->
+  <div class="card">
+    <div class="quick-grid">
+      <button class="btn" onclick="openNotificationSettings()">
+        <span id="dot-notif" class="dot"></span>通知使用权
+      </button>
+      <button class="btn" onclick="openOverlaySettings()">
+        <span id="dot-overlay" class="dot"></span>悬浮窗权限
+      </button>
+      <button class="btn btn-primary" onclick="pullNativeQueue(true)">立即拉取队列</button>
+      <button class="btn btn-danger" onclick="clearAllData()">清空数据</button>
+    </div>
+  </div>
+
+  <!-- 统计卡片 -->
+  <div class="card">
+    <div class="summary-top">
+      <div>
+        <div class="total-label">累计支出</div>
+        <div class="total-val" id="total-amount">¥0.00</div>
+      </div>
+      <div class="count-badge" id="total-count">0 笔</div>
+    </div>
+    <div id="category-bars"></div>
+  </div>
+
+  <!-- 文本补录 & CSV 导入 -->
+  <div class="card">
+    <div class="section-title">快速补录 / 账单导入</div>
+    <textarea id="paste-input" placeholder="粘贴消费通知文本，例如：微信支付：向瑞幸咖啡付款29.50元"></textarea>
+    <div class="row-actions">
+      <button class="btn btn-primary" style="flex:1;" onclick="parseManualText()">识别并记账</button>
+      <label class="file-label">
+        导入微信/支付宝 CSV
+        <input type="file" id="csv-file" accept=".csv,text/csv,text/comma-separated-values,*/*" onchange="handleCsvUpload(event)" />
+      </label>
+    </div>
+  </div>
+
+  <!-- 明细列表 -->
+  <div class="card">
+    <div class="section-title">
+      <span>支出明细</span>
+    </div>
+    <div class="filter-bar" id="filter-bar"></div>
+    <div id="tx-list"></div>
+  </div>
+
+  <div id="toast" class="toast"></div>
+
+  <script>
+    const STORAGE_KEY = 'power_ledger_records_v1';
+    const CATEGORIES = ['餐饮', '交通', '日用便利', '购物'];
+    const CAT_COLORS = {
+      '餐饮': '#f59e0b',
+      '交通': '#3b82f6',
+      '日用便利': '#10b981',
+      '购物': '#8b5cf6'
+    };
+
+    const KEYWORDS = {
+      '餐饮': ['餐', '饭', '面', '咖啡', '奶茶', '饮', '外卖', '饿了么', '美团', '瑞幸', '麦当劳', '肯德基', '居酒屋', '拉面', '便当', '小吃', '火锅'],
+      '交通': ['地铁', '公交', '打车', '滴滴', '高铁', '火车', '出行', '油', '停车', '电车', 'suica', 'pasmo', 'icoca', '出租'],
+      '日用便利': ['便利', '全家', '罗森', '7-11', '7eleven', '超市', '菜', '生鲜', '日用', '药妆', '松本清', '百货'],
+      '购物': ['淘宝', '京东', '拼多多', '商城', '服饰', '数码', '购物', '亚马逊', 'amazon', '乐天', '旗舰店']
+    };
+
+    let activeFilter = '全部';
+    let records = loadRecords();
+
+    function loadRecords() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        return raw ? JSON.parse(raw) : [];
+      } catch (e) {
+        return [];
+      }
+    }
+
+    function saveRecords() {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(records));
+    }
+
+    function showToast(msg) {
+      const el = document.getElementById('toast');
+      el.textContent = msg;
+      el.style.display = 'block';
+      clearTimeout(showToast._t);
+      showToast._t = setTimeout(() => { el.style.display = 'none'; }, 2400);
+    }
+
+    function classify(text, amount) {
+      const lower = (text || '').toLowerCase();
+      for (const cat of CATEGORIES) {
+        if (KEYWORDS[cat].some(kw => lower.includes(kw))) {
+          return cat;
+        }
+      }
+      if (amount <= 35) return '餐饮';
+      if (amount <= 150) return '日用便利';
+      return '购物';
+    }
+
+    function refreshPermissionDots() {
+      const dotNotif = document.getElementById('dot-notif');
+      const dotOverlay = document.getElementById('dot-overlay');
+      if (window.PowerLedgerNative) {
+        try {
+          const nOk = window.PowerLedgerNative.isNotificationServiceEnabled();
+          const oOk = window.PowerLedgerNative.canDrawOverlays();
+          dotNotif.className = 'dot ' + (nOk ? 'on' : 'off');
+          dotOverlay.className = 'dot ' + (oOk ? 'on' : 'off');
+        } catch (e) {}
+      }
+    }
+
+    function openNotificationSettings() {
+      if (window.PowerLedgerNative) {
+        window.PowerLedgerNative.openNotificationSettings();
+      } else {
+        showToast('请在 Android 客户端中操作');
+      }
+    }
+
+    function openOverlaySettings() {
+      if (window.PowerLedgerNative) {
+        window.PowerLedgerNative.openOverlaySettings();
+      } else {
+        showToast('请在 Android 客户端中操作');
+      }
+    }
+
+    function pullNativeQueue(manual = false) {
+      if (!window.PowerLedgerNative) {
+        if (manual) showToast('当前为浏览器预览环境');
+        return;
+      }
+      try {
+        const jsonStr = window.PowerLedgerNative.pullPendingRecords();
+        const incoming = JSON.parse(jsonStr || '[]');
+        if (!incoming.length) {
+          if (manual) showToast('原生队列暂无新记录');
+          return;
+        }
+        const existingKeys = new Set(records.map(r => r.dedupKey || r.id));
+        let added = 0;
+        for (const item of incoming) {
+          const key = item.dedupKey || item.id;
+          if (!existingKeys.has(key)) {
+            records.unshift(item);
+            existingKeys.add(key);
+            added++;
+          }
+        }
+        if (added > 0) {
+          records.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
+          saveRecords();
+          render();
+          showToast(`已同步 ${added} 笔自动记账`);
+        } else if (manual) {
+          showToast('队列记录已同步过');
+        }
+      } catch (e) {
+        if (manual) showToast('拉取失败');
+      }
+    }
+
+    function parseManualText() {
+      const input = document.getElementById('paste-input');
+      const text = input.value.trim();
+      if (!text) {
+        showToast('请先粘贴消费通知文本');
+        return;
+      }
+      const amtMatch = text.match(/(?:¥|￥|RMB|人民币)\s*([0-9]+(?:\.[0-9]{1,2})?)|([0-9]+(?:\.[0-9]{1,2})?)\s*元/) ||
+                       text.match(/(?:支付|付款|扣款|消费|支出)\D{0,6}([0-9]+(?:\.[0-9]{1,2})?)/) ||
+                       text.match(/([0-9]+(?:\.[0-9]{1,2})?)/);
+      if (!amtMatch) {
+        showToast('未识别到有效金额');
+        return;
+      }
+      const amount = parseFloat(amtMatch[1] || amtMatch[2] || amtMatch[0]);
+      if (!amount || amount <= 0) {
+        showToast('金额必须大于 0');
+        return;
+      }
+
+      let merchant = '手动补录';
+      const mMatch = text.match(/(?:向|给|在)([^\s，,。！!：:支付付款消费扣款]{2,20}?)(?:付款|支付|消费|扣款)/);
+      if (mMatch && mMatch[1]) {
+        merchant = mMatch[1];
+      } else {
+        const cleaned = text.replace(/[0-9]+(?:\.[0-9]{1,2})?|¥|￥|元|微信支付|支付宝|付款|支付|消费|支出|成功/g, '').trim();
+        if (cleaned.length >= 2) merchant = cleaned.slice(0, 18);
+      }
+
+      const channel = text.includes('支付宝') ? '支付宝' : (text.includes('微信') ? '微信' : '手动');
+      const category = classify(merchant + ' ' + text, amount);
+
+      records.unshift({
+        id: 'manual_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6),
+        amount,
+        merchant,
+        category,
+        channel,
+        timestamp: Date.now(),
+        source: 'manual'
+      });
+      saveRecords();
+      input.value = '';
+      render();
+      showToast(`已记 -${amount.toFixed(2)} 元 [${category}]`);
+    }
+
+    function parseCsvLine(line) {
+      const res = [];
+      let cur = '';
+      let inQuotes = false;
+      for (let i = 0; i < line.length; i++) {
+        const ch = line[i];
+        if (ch === '"') {
+          if (inQuotes && line[i + 1] === '"') {
+            cur += '"';
+            i++;
+          } else {
+            inQuotes = !inQuotes;
+          }
+        } else if (ch === ',' && !inQuotes) {
+          res.push(cur.trim());
+          cur = '';
+        } else {
+          cur += ch;
+        }
+      }
+      res.push(cur.trim());
+      return res;
+    }
+
+    function decodeCsvBuffer(buffer) {
+      const utf8 = new TextDecoder('utf-8').decode(buffer);
+      if (utf8.includes('交易时间') && utf8.includes('交易对方')) return utf8;
+      try {
+        const gbk = new TextDecoder('gb18030').decode(buffer);
+        if (gbk.includes('交易时间') && gbk.includes('交易对方')) return gbk;
+      } catch (e) {}
+      return utf8;
+    }
+
+    function handleCsvUpload(event) {
+      const file = event.target.files && event.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = () => {
+        try {
+          const text = decodeCsvBuffer(reader.result);
+          const lines = text.split(/\r?\n/).filter(l => l.trim().length > 0);
+          let headerIdx = -1;
+          let headers = [];
+
+          for (let i = 0; i < lines.length; i++) {
+            const cols = parseCsvLine(lines[i]).map(c => c.replace(/^\uFEFF/, '').trim());
+            if (cols.some(c => c.includes('交易时间')) &&
+                cols.some(c => c.includes('交易对方')) &&
+                cols.some(c => c.includes('收/支'))) {
+              headerIdx = i;
+              headers = cols;
+              break;
+            }
+          }
+
+          if (headerIdx === -1) {
+            showToast('未识别到微信/支付宝账单表头');
+            event.target.value = '';
+            return;
+          }
+
+          const idxTime = headers.findIndex(h => h.includes('交易时间'));
+          const idxPeer = headers.findIndex(h => h.includes('交易对方'));
+          const idxGoods = headers.findIndex(h => h.includes('商品'));
+          const idxType = headers.findIndex(h => h.includes('收/支'));
+          const idxAmt = headers.findIndex(h => h.includes('金额'));
+          const idxOrder = headers.findIndex(h => h.includes('交易单号') || h.includes('交易订单号'));
+
+          const existingOrders = new Set(records.map(r => r.orderNo).filter(Boolean));
+          let imported = 0;
+
+          for (let i = headerIdx + 1; i < lines.length; i++) {
+            const cols = parseCsvLine(lines[i]);
+            if (cols.length < 4) continue;
+            const ioType = (cols[idxType] || '').trim();
+            if (!ioType.includes('支出')) continue;
+
+            const rawAmt = (cols[idxAmt] || '').replace(/[¥￥,\s元]/g, '');
+            const amount = parseFloat(rawAmt);
+            if (!amount || amount <= 0) continue;
+
+            const orderNo = idxOrder >= 0 ? (cols[idxOrder] || '').trim() : '';
+            const timeStr = (cols[idxTime] || '').trim();
+            const peer = (cols[idxPeer] || '').trim();
+            const goods = idxGoods >= 0 ? (cols[idxGoods] || '').trim() : '';
+            const dedupOrder = orderNo || `${timeStr}_${peer}_${amount.toFixed(2)}`;
+
+            if (existingOrders.has(dedupOrder)) continue;
+            existingOrders.add(dedupOrder);
+
+            const merchant = peer || (goods && goods !== '/' ? goods : '账单导入');
+            const ts = Date.parse(timeStr.replace(/-/g, '/')) || Date.now();
+            const category = classify(`${peer} ${goods}`, amount);
+
+            records.push({
+              id: 'csv_' + dedupOrder,
+              orderNo: dedupOrder,
+              amount,
+              merchant: merchant.slice(0, 24),
+              category,
+              channel: '账单CSV',
+              timestamp: ts,
+              source: 'csv'
+            });
+            imported++;
+          }
+
+          records.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
+          saveRecords();
+          render();
+          showToast(imported > 0 ? `成功导入 ${imported} 笔支出` : '没有新的支出记录可导入');
+        } catch (err) {
+          showToast('CSV 解析失败');
+        }
+        event.target.value = '';
+      };
+      reader.readAsArrayBuffer(file);
+    }
+
+    function changeCategory(id, newCat) {
+      const target = records.find(r => r.id === id);
+      if (target) {
+        target.category = newCat;
+        saveRecords();
+        render();
+      }
+    }
+
+    function deleteRecord(id) {
+      records = records.filter(r => r.id !== id);
+      saveRecords();
+      render();
+    }
+
+    function clearAllData() {
+      if (!confirm('确定要清空所有本地记账数据吗？')) return;
+      records = [];
+      saveRecords();
+      render();
+      showToast('已清空所有记录');
+    }
+
+    function formatTime(ts) {
+      const d = new Date(ts || Date.now());
+      const pad = n => String(n).padStart(2, '0');
+      return `${d.getMonth() + 1}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+    }
+
+    function escapeHtml(str) {
+      return String(str || '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
+    }
+
+    function render() {
+      const total = records.reduce((s, r) => s + Number(r.amount || 0), 0);
+      document.getElementById('total-amount').textContent = '¥' + total.toFixed(2);
+      document.getElementById('total-count').textContent = records.length + ' 笔';
+
+      const catTotals = {};
+      CATEGORIES.forEach(c => catTotals[c] = 0);
+      records.forEach(r => {
+        const c = CATEGORIES.includes(r.category) ? r.category : '购物';
+        catTotals[c] += Number(r.amount || 0);
+      });
+
+      document.getElementById('category-bars').innerHTML = CATEGORIES.map(cat => {
+        const val = catTotals[cat];
+        const pct = total > 0 ? Math.round((val / total) * 100) : 0;
+        return `
+          <div class="cat-row">
+            <div class="cat-meta">
+              <span>${cat}</span>
+              <span>¥${val.toFixed(2)} (${pct}%)</span>
+            </div>
+            <div class="bar-bg">
+              <div class="bar-fill" style="width:${pct}%;background:${CAT_COLORS[cat]};"></div>
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      const filters = ['全部', ...CATEGORIES];
+      document.getElementById('filter-bar').innerHTML = filters.map(f => `
+        <button class="pill ${activeFilter === f ? 'active' : ''}" onclick="setFilter('${f}')">${f}</button>
+      `).join('');
+
+      const filtered = activeFilter === '全部'
+        ? records
+        : records.filter(r => r.category === activeFilter);
+
+      const listEl = document.getElementById('tx-list');
+      if (!filtered.length) {
+        listEl.innerHTML = '<div class="empty">暂无支出记录</div>';
+        return;
+      }
+
+      listEl.innerHTML = filtered.map(r => `
+        <div class="tx-item">
+          <div class="tx-left">
+            <div class="tx-merchant">${escapeHtml(r.merchant)}</div>
+            <div class="tx-sub">${escapeHtml(r.channel || '自动')} · ${formatTime(r.timestamp)}</div>
+          </div>
+          <div class="tx-right">
+            <div class="tx-amt">-${Number(r.amount).toFixed(2)}</div>
+            <select class="cat-select" onchange="changeCategory('${escapeHtml(r.id)}', this.value)">
+              ${CATEGORIES.map(c => `<option value="${c}" ${r.category === c ? 'selected' : ''}>${c}</option>`).join('')}
+            </select>
+            <button class="del-btn" onclick="deleteRecord('${escapeHtml(r.id)}')">删</button>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function setFilter(f) {
+      activeFilter = f;
+      render();
+    }
+
+    window.onNativeResume = function() {
+      refreshPermissionDots();
+      pullNativeQueue(false);
+    };
+
+    refreshPermissionDots();
+    pullNativeQueue(false);
+    render();
+  </script>
+</body>
+</html>

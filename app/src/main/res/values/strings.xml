@@ -1,0 +1,4 @@
+<resources>
+    <string name="app_name">极省记账</string>
+    <string name="service_name">极省记账 · 支付通知监听</string>
+</resources>
