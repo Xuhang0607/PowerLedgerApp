@@ -59,13 +59,28 @@ class PaymentAccessibilityService : AccessibilityService() {
             lastContentScanMs = now
         }
 
-        val root = rootInActiveWindow ?: event.source ?: return
+        val root = rootInActiveWindow ?: event.source
+        if (root == null) {
+            if (isWindowSwitch) PendingQueueStore.appendDebugLog(applicationContext, "[$pkg] root为null")
+            return
+        }
         val texts = ArrayList<String>(48)
         collectTexts(root, texts, maxNodes = 250)
-        if (texts.isEmpty()) return
+        if (texts.isEmpty()) {
+            if (isWindowSwitch) PendingQueueStore.appendDebugLog(applicationContext, "[$pkg] 节点文本为空")
+            return
+        }
 
         val combined = texts.joinToString(" ")
-        if (SUCCESS_INDICATORS.none { combined.contains(it) }) return
+        if (SUCCESS_INDICATORS.none { combined.contains(it) }) {
+            if (isWindowSwitch || combined.contains("¥") || combined.contains("￥")) {
+                PendingQueueStore.appendDebugLog(
+                    applicationContext,
+                    "未命中成功词: ${texts.take(6).joinToString("|").take(50)}"
+                )
+            }
+            return
+        }
 
         val hitExclude = EXCLUDE_INDICATORS.firstOrNull { combined.contains(it) }
         if (hitExclude != null) {
