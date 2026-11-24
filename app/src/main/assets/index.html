@@ -274,6 +274,9 @@
   <!-- 快捷操作 -->
   <div class="card">
     <div class="quick-grid">
+      <button class="btn" onclick="openAccessibilitySettings()">
+        <span id="dot-a11y" class="dot"></span>无障碍自动记账
+      </button>
       <button class="btn" onclick="openNotificationSettings()">
         <span id="dot-notif" class="dot"></span>通知使用权
       </button>
@@ -281,7 +284,7 @@
         <span id="dot-overlay" class="dot"></span>悬浮窗权限
       </button>
       <button class="btn btn-primary" onclick="pullNativeQueue(true)">立即拉取队列</button>
-      <button class="btn btn-danger" onclick="clearAllData()">清空数据</button>
+      <button class="btn btn-danger" style="grid-column: span 2;" onclick="clearAllData()">清空数据</button>
     </div>
   </div>
 
@@ -375,15 +378,26 @@
     }
 
     function refreshPermissionDots() {
+      const dotA11y = document.getElementById('dot-a11y');
       const dotNotif = document.getElementById('dot-notif');
       const dotOverlay = document.getElementById('dot-overlay');
       if (window.PowerLedgerNative) {
         try {
+          const aOk = window.PowerLedgerNative.isAccessibilityServiceEnabled();
           const nOk = window.PowerLedgerNative.isNotificationServiceEnabled();
           const oOk = window.PowerLedgerNative.canDrawOverlays();
+          dotA11y.className = 'dot ' + (aOk ? 'on' : 'off');
           dotNotif.className = 'dot ' + (nOk ? 'on' : 'off');
           dotOverlay.className = 'dot ' + (oOk ? 'on' : 'off');
         } catch (e) {}
+      }
+    }
+
+    function openAccessibilitySettings() {
+      if (window.PowerLedgerNative) {
+        window.PowerLedgerNative.openAccessibilitySettings();
+      } else {
+        showToast('请在 Android 客户端中操作');
       }
     }
 

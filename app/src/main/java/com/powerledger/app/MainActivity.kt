@@ -119,6 +119,16 @@ class MainActivity : AppCompatActivity() {
         }
 
         @JavascriptInterface
+        fun openAccessibilitySettings() {
+            runOnUiThread {
+                val intent = Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS).apply {
+                    addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                }
+                startActivity(intent)
+            }
+        }
+
+        @JavascriptInterface
         fun isNotificationServiceEnabled(): Boolean {
             val enabledListeners = Settings.Secure.getString(
                 contentResolver,
@@ -126,6 +136,24 @@ class MainActivity : AppCompatActivity() {
             ) ?: return false
             val target = ComponentName(this@MainActivity, PaymentNotificationService::class.java)
             return enabledListeners.split(":").any {
+                ComponentName.unflattenFromString(it) == target
+            }
+        }
+
+        @JavascriptInterface
+        fun isAccessibilityServiceEnabled(): Boolean {
+            val enabled = Settings.Secure.getInt(
+                contentResolver,
+                Settings.Secure.ACCESSIBILITY_ENABLED,
+                0
+            )
+            if (enabled != 1) return false
+            val services = Settings.Secure.getString(
+                contentResolver,
+                Settings.Secure.ENABLED_ACCESSIBILITY_SERVICES
+            ) ?: return false
+            val target = ComponentName(this@MainActivity, PaymentAccessibilityService::class.java)
+            return services.split(":").any {
                 ComponentName.unflattenFromString(it) == target
             }
         }
